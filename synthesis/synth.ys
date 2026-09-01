@@ -1,0 +1,10 @@
+read_verilog ../rtl/adder_8bit.v
+hierarchy -top adder_8bit
+proc
+opt
+techmap
+opt
+abc -g simple
+clean
+stat
+write_verilog -noattr adder_8bit_synth.v

@@ -1,0 +1,10 @@
+{
+    "DESIGN_NAME": "adder_8bit",
+    "VERILOG_FILES": [
+        "dir::adder_8bit.v"
+    ],
+    "CLOCK_PORT": "",
+    "CLOCK_PERIOD": 10,
+    "FP_CORE_UTIL": 30,
+    "PL_TARGET_DENSITY": 0.55
+}

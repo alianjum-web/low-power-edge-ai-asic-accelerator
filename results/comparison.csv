@@ -1,0 +1,6 @@
+design,precision,mac_architecture,die_area_um2,max_freq_mhz,power_mw,cycles_per_inference,throughput_inf_s,energy_per_inference_nj,accuracy_pct,notes
+adder_8bit,n/a,n/a,2577.88,,,,n/a,n/a,n/a,Experiment 0 RUN_2026.08.30_06.36.00; DIEAREA_mm^2=0.002577883425
+int8_sequential,INT8,sequential,,,,,,,,,Phase 4
+int8_parallel,INT8,4-way,,,,,,,,,Phase 3 then 4
+int4_sequential,INT4,sequential,,,,,,,,,Phase 4
+int4_parallel,INT4,4-way,,,,,,,,,Phase 4

@@ -1,0 +1,35 @@
+# Toolchain (keep OpenLane as a local install, not project source)
+OpenLane/
+.ciel/
+volare/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Simulation / Verilator
+obj_dir/
+*.vcd
+*.fst
+*.vvp
+testbench/adder_sim
+synthesis/synth_sim
+
+# OpenLane run trees if anyone copies them into the repo
+runs/
+*.log
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets
+.env
+*.pem
+credentials.json
