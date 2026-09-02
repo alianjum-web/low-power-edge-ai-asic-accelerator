@@ -4,6 +4,8 @@
 |---|---|
 | [00_project_overview.md](00_project_overview.md) | Scope, stack, validation levels, research question |
 | [01_status_and_roadmap.md](01_status_and_roadmap.md) | Experiment 0 checkpoint and next work |
+| [02_eight_week_sprint_plan.md](02_eight_week_sprint_plan.md) | Master 8-week plan: gates, skills, what not to learn, final package |
+| [sprints/](sprints/) | Week-by-week sprint guides for contributors |
 | [architecture.md](architecture.md) | Adder RTL vs planned 8×4 PE array |
 | [quantization.md](quantization.md) | Symmetric signed INT8 (and later INT4) |
 | [verification.md](verification.md) | Python / RTL / physical checks |

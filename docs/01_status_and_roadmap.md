@@ -52,6 +52,14 @@ From `results/baseline/metrics.csv`:
 - Do not optimize power yet.
 - Do not write the research paper yet.
 
+## Eight-week execution plan
+
+The preferred **calendar** for finishing the chain (algorithm → RTL → verification → OpenLane → GDSII → one or two optimizations → report) is:
+
+**[02_eight_week_sprint_plan.md](02_eight_week_sprint_plan.md)** and **[sprints/](sprints/)**.
+
+Phases in the table above still describe *what* is true of the repo. Sprints describe *when* a new person should do the work (~20–25 hours/week, eight weeks). Do not skip Sprint 3 (RTL vs Python) because Experiment 0 already produced adder GDSII.
+
 ## Immediate order of work
 
 1. Preserve the successful adder project (done).

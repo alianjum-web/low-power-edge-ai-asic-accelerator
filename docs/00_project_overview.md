@@ -5,6 +5,10 @@ for Edge-AI Signal Processing
 
 A SKY130 RTL-to-GDSII study of quantized MAC architectures for Edge-AI inference, with a Python golden model, bit-exact RTL verification, and a controlled INT8/INT4 × sequential/parallel experiment.
 
+## How to execute this (8 weeks)
+
+Follow **[02_eight_week_sprint_plan.md](02_eight_week_sprint_plan.md)**. New contributors: [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Pipeline
 
 Python/AI model → quantization → SystemVerilog RTL → functional verification → synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDSII → architectural comparison.

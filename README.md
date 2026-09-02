@@ -51,7 +51,9 @@ Do **not** commit the nested `OpenLane/` tree, virtualenvs, or raw run directori
 
 ## Current status
 
-Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, then a correct 8×4 accelerator (each PE holds eight weights), then OpenLane. Full roadmap: [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md).
+Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, then a correct 8×4 accelerator (each PE holds eight weights), then OpenLane.
+
+**How to follow the work (new contributors):** complete the project as **8 weekly sprints** (~20–25 hours/week). Start at [docs/02_eight_week_sprint_plan.md](docs/02_eight_week_sprint_plan.md) and open only the current week under [docs/sprints/](docs/sprints/). Contribution rules: [CONTRIBUTING.md](CONTRIBUTING.md). Checkpoint list: [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md).
 
 ## Documentation
 
@@ -59,6 +61,8 @@ Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, t
 |---|---|
 | [docs/00_project_overview.md](docs/00_project_overview.md) | Scope, stack, validation levels |
 | [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md) | Checkpoint and next steps |
+| [docs/02_eight_week_sprint_plan.md](docs/02_eight_week_sprint_plan.md) | 8-week calendar, gates, stack, final package |
+| [docs/sprints/](docs/sprints/) | Detailed Week 1–8 guides (tasks, files, acceptance) |
 | [docs/architecture.md](docs/architecture.md) | Adder + planned PE array |
 | [docs/quantization.md](docs/quantization.md) | Symmetric signed INT8 policy |
 | [docs/verification.md](docs/verification.md) | Golden model and hierarchical tests |
