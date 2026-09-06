@@ -69,8 +69,10 @@ Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, t
 
 | Document | Contents |
 |---|---|
+| [AGENTS.md](AGENTS.md) | Instructions for AI coding agents: ground-truth hierarchy, current state, hard rules |
 | [docs/00_project_overview.md](docs/00_project_overview.md) | Scope, stack, validation levels |
 | [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md) | Checkpoint and next steps |
+| [docs/research_question.md](docs/research_question.md) | Frozen question, hypothesis, variables, scope |
 | [docs/02_eight_week_sprint_plan.md](docs/02_eight_week_sprint_plan.md) | 8-week calendar, gates, stack, final package |
 | [docs/sprints/](docs/sprints/) | Detailed Week 1–8 guides (tasks, files, acceptance) |
 | [docs/architecture.md](docs/architecture.md) | Adder + planned PE array |
