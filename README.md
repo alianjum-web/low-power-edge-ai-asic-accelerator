@@ -16,6 +16,10 @@ A SKY130 RTL-to-GDSII study of low-power MAC architectures for quantized Edge-AI
 
 Headline metric for the accelerator study: **energy per inference**. Experiment 0 is the toolchain proof (combinational 8-bit adder through OpenLane, run `RUN_2026.08.30_06.36.00`).
 
+## Baseline
+
+This project builds on the open-source **SiliconNPU** RTL-to-GDS baseline (MIT-licensed), merged into this repository on 2026-09-06. `rtl/silicon_npu.sv`, `rtl/mac_core.sv`, and `rtl/mac_core_pipelined.sv` are the baseline datapaths this project's INT8/INT4 sequential/parallel sprint work extends; `flow/` is the baseline's OpenLane orchestration. The original baseline's documentation (developer/user/install guides, its own final report) has been folded into [docs/baseline_reference.md](docs/baseline_reference.md) as a single source of truth — that file clearly marks which of the original authors' claims (toolchain versions, reported area/power/timing) have **not** been reproduced or verified in this repository. The previous from-scratch, unverified `edge_ai_accelerator.sv`/`mac_unit.sv` datapath has been retired to [legacy/](legacy/) now that `silicon_npu.sv`/`mac_core.sv` are the adopted baseline.
+
 ## Research question
 
 How do reduced numerical precision and MAC parallelism affect energy-efficiency, silicon area, timing, latency, and inference accuracy of a small Edge-AI accelerator in SKY130?
@@ -39,12 +43,18 @@ RTL → synthesis → floorplan → placement → CTS → routing → DRC → LV
 
 ```text
 algorithm/      Python golden model and test vectors (Phase 1)
-rtl/            Synthesizable Verilog / SystemVerilog
+rtl/            Synthesizable Verilog / SystemVerilog (baseline: silicon_npu.sv, mac_core*.sv)
 verification/   Testbenches and reference vectors
-designs/        OpenLane configs per design variant
+designs/        OpenLane configs per design variant (Experiment 0 / this project's own runs)
+flow/           SiliconNPU baseline's OpenLane orchestration (Makefile, config.tcl, openlane_config/)
 results/        Curated metrics and final GDS artifacts
-docs/           Architecture, verification, PD, research plan
-scripts/        Simulation and OpenLane helpers
+docs/           This project's architecture, verification, PD, research plan ("My Docs"),
+                including baseline_reference.md (single source of truth for the former docs1/)
+legacy/         Retired pre-baseline RTL (edge_ai_accelerator.sv, mac_unit.sv) and its testbenches
+openmac/        Baseline's Python analysis/report-parsing library
+scripts/        Simulation and OpenLane helpers (this project's + baseline's)
+screenshots/    Baseline physical-design stage screenshots (placement, routing, power grid)
+tests/          Unit tests for openmac/
 ```
 
 Do **not** commit the nested `OpenLane/` tree, virtualenvs, or raw run directories. GitHub is the lab notebook, not a dump of the ASIC toolchain.

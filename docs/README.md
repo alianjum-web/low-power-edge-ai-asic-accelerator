@@ -7,6 +7,7 @@
 | [02_eight_week_sprint_plan.md](02_eight_week_sprint_plan.md) | Master 8-week plan: gates, skills, what not to learn, final package |
 | [sprints/](sprints/) | Week-by-week sprint guides for contributors |
 | [architecture.md](architecture.md) | Adder RTL vs planned 8×4 PE array |
+| [baseline_reference.md](baseline_reference.md) | Inherited SiliconNPU MAC-core RTL, toolchain, OpenLane configs, and reported (unverified) PPA — single source of truth for the former `docs1/` |
 | [quantization.md](quantization.md) | Symmetric signed INT8 (and later INT4) |
 | [verification.md](verification.md) | Python / RTL / physical checks |
 | [physical_design.md](physical_design.md) | OpenLane stages, knobs, metrics |
