@@ -6,10 +6,15 @@ volare/
 # Python
 .venv/
 venv/
+env/
 __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+dist/
+build/
+.eggs/
+*.egg
 
 # Simulation / Verilator
 obj_dir/
@@ -22,10 +27,24 @@ synthesis/synth_sim
 # OpenLane run trees if anyone copies them into the repo
 runs/
 *.log
+*.rpt
+reports/
+issue_reproducible/
+gtkwave/
+*.bmp
+
+# Generated report artifacts (regenerate via scripts/, don't hand-edit)
+metrics.json
+exploration_results.json
+analysis_results.json
 
 # OS / editor
 .DS_Store
+Thumbs.db
+desktop.ini
 *.swp
+*.swo
+*~
 .idea/
 .vscode/
 
@@ -33,3 +52,7 @@ runs/
 .env
 *.pem
 credentials.json
+
+# SiliconNPU baseline scratch scripts (not project source)
+render_magic.tcl
+render_openroad.tcl
