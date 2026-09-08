@@ -1,0 +1,17 @@
+{
+    "DESIGN_NAME": "accelerator_top_int4",
+    "VERILOG_FILES": [
+        "dir::accelerator_top_int4.sv",
+        "dir::../../rtl/accelerator_top.sv",
+        "dir::../../rtl/controller.sv",
+        "dir::../../rtl/processing_element.sv",
+        "dir::../../rtl/requantize.sv"
+    ],
+    "CLOCK_PORT": "clk",
+    "CLOCK_PERIOD": 20,
+    "FP_CORE_UTIL": 35,
+    "PL_TARGET_DENSITY": 0.50,
+    "SYNTH_STRATEGY": "AREA 0",
+    "GRT_MAX_DIODE_INS_ITERS": 5,
+    "CLOCK_BUFFER_FANOUT": 8
+}

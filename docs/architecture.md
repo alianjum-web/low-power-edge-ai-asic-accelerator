@@ -18,6 +18,19 @@ endmodule
 
 The manual’s clocked adder is **not** what went through OpenLane. Experiment 0 is a **toolchain proof**, not the research datapath.
 
+## Inherited baseline (reference-only)
+
+The inherited SiliconNPU MAC modules are retained for provenance and comparison only. They are not part of the active Version 1 accelerator hierarchy and are excluded from the standard simulation and lint flow. They must not be described as this project's original implementation.
+
+The inherited `rtl/mac_core.sv`, `rtl/mac_core_pipelined.sv`, and `rtl/silicon_npu.sv` are documented in [baseline_reference.md](baseline_reference.md) for provenance only. The active Version 1 design does not depend on them; they are excluded from the current accelerator hierarchy.
+
+**Audited and fixed 2026-09-07** (see [architecture_spec.md](architecture_spec.md) section 6 for the full before/after):
+- `operand_a`/`operand_b` (and `silicon_npu.sv`'s `weight_mem`/`act_mem`) are now `signed`, so this project's quantization policy — symmetric signed INT8 ([docs/quantization.md](quantization.md)) — multiplies correctly instead of as unsigned magnitudes. Verified against updated testbenches with signed-boundary and cross-sign test cases, not just reviewed.
+- `mac_core` still computes one dot product (one neuron); the 4-neuron, bias + ReLU + requantize accelerator is now implemented separately as `rtl/accelerator_top.sv` / `rtl/processing_element.sv` / `rtl/requantize.sv` / `rtl/controller.sv` (below), not by extending `mac_core` itself.
+- The active Version 1 hierarchy is lint-clean with Verilator. The inherited reference modules are intentionally outside this lint target.
+
+This replaces the retired `rtl/mac_unit.sv` / `rtl/edge_ai_accelerator.sv`, which was unsynthesized and unverified. The active implementation begins with the Version 1 accelerator below.
+
 ## Version 1 accelerator (to build)
 
 Neural-network operation:
@@ -75,19 +88,25 @@ Simple hardware is the right first milestone while learning physical design.
 INT8 × INT8 → INT16 product → INT32 accumulate → ReLU → requantize → INT8
 ```
 
-## Manual PE issue (must audit)
+## Manual PE issue (resolved 2026-09-07)
 
-The technical manual describes a weight-stationary PE with `acc += product` and a single `weight_reg`, plus four PEs, while the layer has 8 × 4 = 32 weights. One register cannot retain a column of eight weights. Do not run that RTL through OpenLane until the load/compute protocol is proven against the Python golden model.
+The technical manual describes a weight-stationary PE with `acc += product` and a single `weight_reg`, plus four PEs, while the layer has 8 × 4 = 32 weights. One register cannot retain a column of eight weights. `rtl/processing_element.sv` fixes this: each PE holds an 8-deep `weight` register array (one register per input position), verified directly in `verification/tb_processing_element.sv` ("Test 1: Eight independent weight registers" writes all eight and checks all eight survive together, not just the last write).
 
-## Planned RTL files (Phase 2)
+## RTL files (Phase 2, delivered)
 
 | File | Role |
 |---|---|
-| `rtl/mac_unit.sv` | INT8×INT8 multiply + INT32 accumulate |
-| `rtl/processing_element.sv` | Weight column + MAC + local acc |
-| `rtl/accelerator_top.sv` | FSM: IDLE → LOAD → COMPUTE → STORE |
+| `rtl/mac_core.sv` | Inherited baseline dot-product reference; excluded from the active Version 1 flow |
+| `rtl/mac_core_pipelined.sv` | Inherited pipelined baseline reference; excluded from the active Version 1 flow |
+| `rtl/silicon_npu.sv` | Inherited wrapper reference; excluded from the active Version 1 flow |
+| `rtl/processing_element.sv` | Weight column (8 signed registers) + signed MAC + INT32 accumulator with bias preload |
+| `rtl/controller.sv` | FSM: IDLE → LOAD → COMPUTE → DONE_S (ACCUMULATE folded into COMPUTE, DONE_S doubles as STORE — see architecture_spec.md section 3) |
+| `rtl/requantize.sv` | ReLU + power-of-two shift/round/saturate to INT8, bit-exact with `algorithm/quantization.requantize_int8` composed with `algorithm/reference_model.relu` |
+| `rtl/accelerator_top.sv` | Top: 4x `processing_element` + `controller` + 4x `requantize` + shared activation/bias memories |
 
-Keep `mac_unit` parameterized so INT4 and sequential variants reuse it.
+See [architecture_spec.md](architecture_spec.md) for the full port lists, FSM/timing diagram, memory map, and verification evidence (bit-exact against `algorithm/reference_model.py` on real golden vectors, not just reviewed).
+
+Keep `mac_core`'s `WIDTH`/`ARRAY_SIZE` parameters driving INT4 vs INT8 and sequential vs parallel variants, rather than reintroducing a separate `mac_unit`.
 
 ## Research variants (Phase 4)
 
