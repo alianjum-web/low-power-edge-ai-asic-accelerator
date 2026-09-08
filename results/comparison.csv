@@ -1,6 +1,6 @@
 design,precision,mac_architecture,die_area_um2,max_freq_mhz,power_mw,cycles_per_inference,throughput_inf_s,energy_per_inference_nj,accuracy_pct,notes
 adder_8bit,n/a,n/a,2577.88,,,,n/a,n/a,n/a,Experiment 0 RUN_2026.08.30_06.36.00; DIEAREA_mm^2=0.002577883425
-int8_sequential,INT8,sequential,,,,,,,,,Phase 4
-int8_parallel,INT8,4-way,,,,,,,,,Phase 3 then 4
-int4_sequential,INT4,sequential,,,,,,,,,Phase 4
-int4_parallel,INT4,4-way,,,,,,,,,Phase 4
+int8_sequential,INT8,sequential,,,,,,,,Phase 4
+int8_parallel,INT8,4-way,246796.414625,50,0.000057000053,10,5000000,0.0000114000106,90.7775,"OpenLane project_run_02; baseline; DRC/LVS/XOR/route/setup/hold clean; antenna and max-fanout warnings documented. energy_per_inference_nj corrected in Sprint 7: was 0.0114000106 (computed as P[mW]*t[ns], which is picojoules, not nanojoules -- a 1000x unit bug); correct value is P[W]*t[s] converted to nJ. accuracy_pct from algorithm/measure_accuracy.py (synthetic FP32-vs-quantized NRMSE, seed=1234, N=2000 -- no real dataset adopted yet, see algorithm/README.md)."
+int4_sequential,INT4,sequential,,,,,,,,Phase 4
+int4_parallel,INT4,4-way,172923.286025,50,0.0000212000375,10,5000000,0.0000042400075,81.3711,"Sprint 7: OpenLane project_run_01, same install/PDK/CLOCK_PERIOD as int8_parallel's project_run_02. Top module accelerator_top_int4 (wrapper instantiating accelerator_top #(.DATA_WIDTH(4))) instead of relying on SYNTH_PARAMETERS/chparam, which was confirmed broken for this design's hierarchy under this repo's Yosys 0.33 -- see results/int4_parallel/signoff.md. DRC/LVS/XOR/route/setup-hold clean; antenna (14 pin/11 net, fewer than int8_parallel's 23/19) and max-fanout warnings documented. accuracy_pct from the same algorithm/measure_accuracy.py run as int8_parallel (paired random draw, only bits/shift differ)."

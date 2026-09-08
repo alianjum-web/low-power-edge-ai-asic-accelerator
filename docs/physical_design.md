@@ -41,13 +41,16 @@ There is `OpenLane/designs/adder_8bit/config_lowpower.json` (util 45, density 0.
 
 ## Accelerator starting knobs (tune after RTL exists)
 
-Conservative first try (energy, not peak GHz):
+The active baseline config for Sprint 4 is in [../designs/accelerator_int8_parallel/config.json](../designs/accelerator_int8_parallel/config.json):
 
+- `CLOCK_PORT`: `clk`
 - `CLOCK_PERIOD`: 20 ns (50 MHz)
 - `FP_CORE_UTIL`: 35
 - `PL_TARGET_DENSITY`: 0.50
 - `SYNTH_STRATEGY`: `AREA 0`
-- Shared RTL via `dir::../../rtl/...` so variants reuse `mac_unit`
+- Shared RTL via the active Version 1 accelerator hierarchy; inherited baseline modules are reference-only and are not selected for current accelerator runs.
+
+The INT8 parallel baseline has now been measured with OpenLane run `project_run_02`. Curated values are in [../results/int8_parallel/metrics.csv](../results/int8_parallel/metrics.csv), with signoff details in [../results/int8_parallel/signoff.md](../results/int8_parallel/signoff.md). The run completed through GDS/LVS/DRC, but antenna and max-fanout warnings remain documented rather than silently discarded.
 
 Wide 32-bit accumulator buses route poorly at high density. If placement or routing fails, lower density first; do not raise `OUT_DIM`.
 
@@ -69,6 +72,15 @@ After a run, copy **summaries** into `results/<variant>/`, not the whole `runs/`
 - Slack: signoff STA
 - Power: signoff power (internal, switching, leakage)
 - Manufacturability: Magic DRC, LVS, KLayout if enabled
+
+## Baseline OpenLane configs (inherited)
+
+`flow/openlane_config/*.tcl` and `flow/config.tcl` are the SiliconNPU baseline's own OpenLane configs for `mac_core`, `mac_core_pipelined`, and `silicon_npu` — real starting points, not fabricated. Two things were found by reading every `.tcl` file directly (not just the prose in `docs1/final_report.md`):
+
+- **Fixed 2026-09-07:** all four files originally hardcoded `VERILOG_FILES` as an absolute Docker path (`/workspace/flow/src/...`), which assumed the baseline's own WSL2 + Docker install (see [baseline_reference.md](baseline_reference.md)). This repo runs OpenLane as a **local install** (see above) — all four now use a relative `dir::` reference pointing at `rtl/*.sv` directly, and the `flow/src/*.sv` duplicate copies those paths used to require have been deleted.
+- `flow/openlane_config/npu_15ns.tcl` is still misleadingly named: its `CLOCK_PERIOD` is actually `20.0`, not `15.0` — check the file, not the filename, before reusing it. (Not fixed — the mismatch is between the filename and its own content, not something blocking the config from running; renaming is Phase 4 sweep housekeeping.)
+
+See [baseline_reference.md](baseline_reference.md) for the full inherited toolchain/PPA claims and what has and hasn't been reproduced here.
 
 ## PDK reminder
 

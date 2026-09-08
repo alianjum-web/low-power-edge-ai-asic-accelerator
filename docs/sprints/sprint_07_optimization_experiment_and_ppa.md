@@ -122,10 +122,10 @@ INT4 may shrink the multiplier and switching; it may also degrade accuracy. Meas
 
 ## Acceptance criteria
 
-- [ ] Baseline and optimized both have PPA from the same methodology
-- [ ] Table includes area, power, delay/frequency, energy, accuracy
-- [ ] Improvement formulas applied; negative results kept
-- [ ] No variant claimed without a run tag
+- [x] Baseline and optimized both have PPA from the same methodology — same OpenLane v1.0.2 install, same PDK/library, same `CLOCK_PERIOD`; see [docs/ppa_comparison.md](../ppa_comparison.md)
+- [x] Table includes area, power, delay/frequency, energy, accuracy — [docs/ppa_comparison.md](../ppa_comparison.md)'s main comparison table
+- [x] Improvement formulas applied; negative results kept — accuracy is reported as a **-9.41 point** degradation, not dropped or reframed as a win
+- [x] No variant claimed without a run tag — `int8_parallel/project_run_02`, `int4_parallel/project_run_01`, both recorded in `results/comparison.csv`
 
 ---
 
