@@ -27,7 +27,7 @@ Sequential may look “low power” on a wattmeter and still lose on **energy/in
 - Same OpenLane major version
 - Same golden-model method (symmetric quantization unless the experiment *is* asymmetric)
 - Change one architectural variable at a time
-- Keep `mac_unit` shared when bit-width is the only change
+- Keep the active Version 1 accelerator hierarchy shared when bit-width is the only change; inherited `mac_core` modules are reference-only.
 
 ## Evaluation table (fill with measured numbers)
 

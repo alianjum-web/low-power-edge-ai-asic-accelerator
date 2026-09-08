@@ -36,8 +36,8 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
    an agent five sessions from now will trust it over anything else.
 2. **`CONTRIBUTING.md`** and **`docs/02_eight_week_sprint_plan.md`** +
    **`docs/sprints/sprint_NN_*.md`** — the plan is executed one sprint
-   at a time. Do not jump ahead (e.g. do not touch OpenLane while
-   accelerator RTL is unaudited) even if it looks easy.
+   at a time. Do not jump ahead (e.g. do not touch OpenLane before
+   Sprint 3 passes) even if it looks easy.
 3. **`docs/baseline_reference.md`** — this project inherited a working
    third-party RTL/OpenLane baseline (SiliconNPU, MIT-licensed:
    `rtl/mac_core*.sv`, `rtl/silicon_npu.sv`, `flow/`, `openmac/`,
@@ -52,16 +52,16 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
    between a topic doc and the status doc as a sign the topic doc is
    stale, and fix it rather than picking whichever is convenient.
 
-## Current state (as of 2026-09-06 — verify against the status doc before relying on this)
+## Current state (as of 2026-09-08 — verify against the status doc before relying on this)
 
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Adder through OpenLane to GDSII (toolchain proof) | Done. `results/baseline/`, run tag `RUN_2026.08.30_06.36.00`. |
 | 1 | Python golden model, symmetric INT8, Version 1 | Done for Version 1: `algorithm/reference_model.py` + `quantization.py` (GEMV→bias→ReLU→requantize-to-INT8), 8/8 known-answer tests (`algorithm/tests/`), 5 deterministic vectors (`verification/reference/vectors.{csv,hex}`), `docs/research_question.md`, `algorithm/baseline_results.csv`. |
-| 2 | Smallest correct accelerator RTL + simulation | **Not done.** Inherited baseline RTL (`rtl/mac_core.sv`, `rtl/silicon_npu.sv`) exists but is *not* the Version 1 accelerator: no signed arithmetic anywhere, no bias/ReLU/requantize, and `silicon_npu.sv` sums into **one scalar**, not 4 independent per-neuron outputs. Must be audited/rewritten, not assumed correct. |
-| 3 | Verified accelerator through OpenLane → GDSII | Not started for Version 1. (Baseline's own `mac_core`/`silicon_npu` variants were *reportedly* taken through OpenLane by the original SiliconNPU authors, unreproduced here — see `docs/baseline_reference.md`.) |
-| 4 | INT8/INT4 × sequential/parallel four-point study | Not started. |
-| 5 | Package: figures, report, CV/SOP language | Structure ready; no numbers to report yet. |
+| 2 | Smallest correct accelerator RTL + simulation | **Done for Version 1.** `rtl/accelerator_top.sv` (+ `processing_element.sv`, `controller.sv`, `requantize.sv`) implements 4 independent PEs, signed INT8x INT8 -> INT32 accumulate with bias preload, ReLU, and round-half-up requantize. Bit-exact against `algorithm/reference_model.forward()` on real golden vectors (`verification/tb_accelerator.sv`, 15/15 checks pass). Inherited baseline (`mac_core*.sv`, `silicon_npu.sv`) audited/signed-fixed and lint-clean but intentionally *not* restructured into the 4-PE shape — see `docs/architecture_spec.md`. |
+| 3 | Verified accelerator through OpenLane → GDSII | **Done for the INT8 4-way parallel baseline (2026-09-08, Sprint 4+5).** OpenLane `v1.0.2` run tag `project_run_02` completed synthesis → floorplan → PDN → placement → CTS → routing → parasitic extraction → STA → DRC → LVS → antenna → GDSII for `accelerator_top`. DRC 0, LVS 0, XOR 0, route/setup/hold violations 0; CTS is real (clocked, worst setup slack 3.74 ns, worst hold slack 0.16 ns); 23 pin / 19 net antenna violations and max-fanout warnings are documented follow-up, not silently cleared. Curated evidence: `results/int8_parallel/{metrics.csv,signoff.md,accelerator_top_project_run_02.gds}` and `screenshots/int8_parallel/`. See `docs/sprints/sprint_05_rtl_to_gdsii.md` "How to verify Sprint 5". Baseline's own `mac_core`/`silicon_npu` variants remain *reportedly* taken through OpenLane by the original SiliconNPU authors, unreproduced-by-this-project's-measurement — see `docs/baseline_reference.md`. |
+| 4 | INT8/INT4 × sequential/parallel four-point study | Not started. Do not begin until Sprint 6 — this baseline (INT8 parallel) is one of the four points, not the whole study. |
+| 5 | Package: figures, report, CV/SOP language | Structure ready; INT8-parallel baseline numbers exist, the other three variants don't yet — do not write final report language until all four are measured. |
 
 ## Hard rules
 
@@ -73,7 +73,10 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
 - **Do not run OpenLane on accelerator RTL that hasn't passed a
   functional audit and Python↔RTL bit-exact comparison.** Experiment 0
   (the adder) is the only proven toolchain run; it does not certify
-  any accelerator RTL.
+  any accelerator RTL. `rtl/accelerator_top.sv` has passed Sprint 2's
+  audit + a partial bit-exact check (3/5 golden vectors, see
+  `docs/architecture_spec.md`) but not Sprint 3's fuller sweep — still
+  do not run OpenLane on it until Sprint 3 passes.
 - **Symmetric signed INT8, zero-point 0, everywhere for Version 1.**
   Do not introduce asymmetric unsigned 0–255 activations — it breaks
   bit-exact Python/RTL comparison (`docs/quantization.md`).
@@ -95,20 +98,31 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
 
 ## Known issues already on record (don't rediscover, don't ignore)
 
-From `docs/01_status_and_roadmap.md` §"Technical issues already
-identified":
+Originally from `docs/01_status_and_roadmap.md` §"Technical issues
+already identified"; items 1-3 fixed 2026-09-07 (see
+`docs/architecture_spec.md` and `docs/baseline_reference.md` for the
+verified fixes, not just a status flip here):
 
-1. `silicon_npu.sv` stores weights correctly (`weight_mem[DEPTH][ARRAY_SIZE]`,
-   the right shape for weight-stationary) but **accumulates everything
-   into one scalar `result`** instead of 4 independent per-neuron
-   accumulators. Must be split before it matches Version 1.
-2. Inherited RTL (`mac_core.sv`, `silicon_npu.sv`, `mac_core_pipelined.sv`)
-   uses plain unsigned `logic` with **no signed multiply anywhere** —
-   incompatible with the symmetric signed INT8 policy until audited/fixed.
-3. `flow/openlane_config/*.tcl` hardcode an absolute Docker path
-   (`/workspace/flow/src/...`); this repo runs OpenLane as a **local
-   install**, so these configs will not run as-is.
-4. `flow/openlane_config/npu_15ns.tcl` is misleadingly named — its
+1. ~~`silicon_npu.sv` accumulates everything into one scalar `result`
+   instead of 4 independent per-neuron accumulators.~~ Not restructured
+   in place (kept as its own OpenLane PPA artifact, see
+   `docs/architecture_spec.md` section 6) — the 4-independent-neuron
+   requirement is met by the new `rtl/accelerator_top.sv` /
+   `rtl/processing_element.sv` instead.
+2. ~~Inherited RTL (`mac_core.sv`, `silicon_npu.sv`,
+   `mac_core_pipelined.sv`) uses plain unsigned `logic` with no signed
+   multiply anywhere.~~ Fixed: all three now declare `signed` operands
+   throughout, verified against updated testbenches with signed-boundary
+   and cross-sign test cases (not just reviewed) — see
+   `docs/architecture_spec.md` section 6.
+3. ~~`flow/openlane_config/*.tcl` hardcode an absolute Docker path
+   (`/workspace/flow/src/...`).~~ Fixed: all four `.tcl` configs now use
+   OpenLane's `dir::` prefix pointing at `rtl/*.sv` directly; the
+   `flow/src/*.sv` duplicate copies are deleted. `openmac/tclgen.py`'s
+   generator was updated the same way. `scripts/explore.py`'s
+   Docker-container-copy path is untouched (separate, still
+   Docker-specific, out of scope) — see `docs/baseline_reference.md`.
+4. `flow/openlane_config/npu_15ns.tcl` is still misleadingly named — its
    actual `CLOCK_PERIOD` is `20.0`, not `15.0`. Check file contents,
    never filenames, before reusing a `.tcl` config.
 
@@ -154,13 +168,14 @@ python3 openmac.py dash
 
 ```text
 algorithm/      Python golden model, quantization, vector generation, tests (Phase 1 — done for V1)
-rtl/            SystemVerilog: inherited baseline (mac_core*.sv, silicon_npu.sv) — unaudited for V1
+rtl/            SystemVerilog: audited/signed baseline (mac_core*.sv, silicon_npu.sv) +
+                Version 1 accelerator (accelerator_top.sv, processing_element.sv,
+                controller.sv, requantize.sv) — done for V1, see docs/architecture_spec.md
 verification/   Testbenches + verification/reference/ (frozen Python vectors)
 designs/        OpenLane configs per variant (adder done; accelerator variants are placeholders)
-flow/           Inherited SiliconNPU OpenLane orchestration (paths need fixing, see Known issues)
+flow/           Inherited SiliconNPU OpenLane orchestration (paths fixed, see Known issues)
 results/        Curated metrics + final GDS only, never full OpenLane run trees
 docs/           Architecture/verification/PD/research plan — see Ground truth hierarchy above
-legacy/         Retired pre-baseline RTL, kept for history, not extended
 openmac/        Inherited Python ASIC-flow analysis/report-parsing library
 scripts/        Simulation and OpenLane helper scripts (this project's + inherited)
 tests/          Unit tests for openmac/ (not algorithm/ — that has its own tests/)
@@ -174,9 +189,10 @@ tests/          Unit tests for openmac/ (not algorithm/ — that has its own tes
    named run tag, not prose from a doc (docs can and do go stale, and
    the inherited baseline docs are *known* to contradict each other).
 3. If it's RTL functional status, check `docs/01_status_and_roadmap.md`
-   §"Technical issues already identified" first — several inherited
-   files look complete but are not audited for this project's signed
-   INT8 requirements.
+   §"Technical issues already identified" and this file's "Known issues"
+   section first — the inherited baseline's signed-arithmetic and
+   flow-path issues were fixed 2026-09-07, but check the actual file,
+   don't assume every open item from an older read is still open.
 4. When in doubt, say what's unverified rather than presenting a guess
    as settled — this file and the status doc both exist specifically
    so agents don't have to guess.

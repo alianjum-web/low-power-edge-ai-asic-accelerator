@@ -163,12 +163,74 @@ docs/physical_design.md    (update knobs that actually ran)
 
 ## Acceptance criteria
 
-- [ ] OpenLane config exists and names the verified RTL
-- [ ] Synthesis completes; cell count and area recorded
-- [ ] Clock is real (CTS will matter in Sprint 5)
-- [ ] Baseline PPA table started (even if GDS is Sprint 5)
-- [ ] Run tag and config knobs written down
-- [ ] No claim of “optimized” yet — this is baseline only
+- [x] OpenLane config exists and names the verified RTL
+- [x] Synthesis completes; cell count and area recorded
+- [x] Clock is real (CTS will matter in Sprint 5)
+- [x] Baseline PPA table started (see `results/int8_parallel/metrics.csv`)
+- [x] Run tag and config knobs written down (`project_run_02`)
+- [x] No claim of “optimized” yet — this is baseline only
+
+## Completed baseline evidence
+
+The INT8 4-way baseline was run with OpenLane `v1.0.2` using run tag
+`project_run_02`. The active configuration is
+[`designs/accelerator_int8_parallel/config.json`](../../designs/accelerator_int8_parallel/config.json),
+and it selects the verified `accelerator_top` RTL hierarchy with a real
+`clk` port and a 20 ns clock.
+
+Curated outputs are kept in
+[`results/int8_parallel/`](../../results/int8_parallel/):
+
+- [`metrics.csv`](../../results/int8_parallel/metrics.csv): area, cell count,
+	timing, power, latency, throughput, and energy per inference.
+- [`signoff.md`](../../results/int8_parallel/signoff.md): run settings and
+	signoff summary.
+- `accelerator_top_project_run_02.gds`: final GDS artifact.
+
+Recorded baseline values:
+
+| Metric | Value |
+|---|---:|
+| Die area | 0.246796414625 mm² |
+| Total cells | 28,761 |
+| Clock target | 20 ns / 50 MHz |
+| Critical path | 7.98 ns |
+| Typical internal power | 0.0257 µW |
+| Typical switching power | 0.0313 µW |
+| Typical leakage power | 0.000000053 µW |
+| Latency | 10 cycles/inference |
+| Energy per inference | 0.0114000106 nJ |
+
+DRC, LVS, XOR, routing, setup, and hold checks are clean. ARC reported 23
+pin-antenna and 19 net-antenna violations, and typical-corner STA reported
+max-fanout warnings; these are recorded follow-up items, not silently treated
+as clean signoff. IR-drop values may be inaccurate because `VSRC_LOC_FILES`
+was not defined.
+
+## How to verify Sprint 4
+
+From the repository root:
+
+```bash
+python3 algorithm/tests/test_reference_model.py
+python3 scripts/check_reference_vectors.py
+python3 -m json.tool designs/accelerator_int8_parallel/config.json >/dev/null
+test -s results/int8_parallel/metrics.csv
+test -s results/int8_parallel/signoff.md
+test -s results/int8_parallel/accelerator_top_project_run_02.gds
+```
+
+The first two commands verify the golden model and frozen vectors that gate
+the synthesis run. The remaining commands verify that the Sprint 4 config and
+curated physical-design evidence exist. To rerun the HDL regression and lint,
+use `scripts/run_sim.sh`; it requires Icarus Verilog, and adds Verilator lint
+when Verilator is installed. A fresh OpenLane rerun requires the local OpenLane
+and SKY130 environment and should be compared with the curated run tag above.
+
+Sprint 4 is complete for the INT8 parallel baseline when all commands above
+pass and `signoff.md` still matches the reported run artifacts. Sprint 4 does
+not claim the four-variant INT8/INT4 study, optimization, or final warning-free
+manufacturing signoff.
 
 ---
 
