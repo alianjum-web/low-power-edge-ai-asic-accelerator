@@ -5,7 +5,7 @@ Curated artifacts only (metrics, comparison table, final GDS). Not full OpenLane
 | Path | Contents |
 |---|---|
 | `baseline/` | Experiment 0 metrics + KLayout GDS |
-| `int8_parallel/` | TBD |
+| `int8_parallel/` | INT8 4-way baseline metrics, signoff summary, and `project_run_02` GDS |
 | `int8_sequential/` | TBD |
 | `int4_parallel/` | TBD |
 | `int4_sequential/` | TBD |

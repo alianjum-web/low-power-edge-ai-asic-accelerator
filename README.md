@@ -16,9 +16,11 @@ A SKY130 RTL-to-GDSII study of low-power MAC architectures for quantized Edge-AI
 
 Headline metric for the accelerator study: **energy per inference**. Experiment 0 is the toolchain proof (combinational 8-bit adder through OpenLane, run `RUN_2026.08.30_06.36.00`).
 
-## Baseline
+## Project ownership and baseline provenance
 
-This project builds on the open-source **SiliconNPU** RTL-to-GDS baseline (MIT-licensed), merged into this repository on 2026-09-06. `rtl/silicon_npu.sv`, `rtl/mac_core.sv`, and `rtl/mac_core_pipelined.sv` are the baseline datapaths this project's INT8/INT4 sequential/parallel sprint work extends; `flow/` is the baseline's OpenLane orchestration. The original baseline's documentation (developer/user/install guides, its own final report) has been folded into [docs/baseline_reference.md](docs/baseline_reference.md) as a single source of truth — that file clearly marks which of the original authors' claims (toolchain versions, reported area/power/timing) have **not** been reproduced or verified in this repository. The previous from-scratch, unverified `edge_ai_accelerator.sv`/`mac_unit.sv` datapath has been retired to [legacy/](legacy/) now that `silicon_npu.sv`/`mac_core.sv` are the adopted baseline.
+The active research implementation is this project's Version 1 accelerator: the Python reference model, quantization path, four-PE signed INT8 RTL, verification, and future controlled variants. Those are the components developed and verified for this study.
+
+The inherited **SiliconNPU** RTL-to-GDS material is MIT-licensed reference/provenance material only. It is excluded from the active Version 1 simulation and lint flow; its files and results must not be presented as original implementation or as measured results for this project. Its attribution, audit notes, and unverified claims are preserved in [docs/baseline_reference.md](docs/baseline_reference.md). The active flow is rooted at `rtl/accelerator_top.sv` and is documented in [docs/architecture_spec.md](docs/architecture_spec.md).
 
 ## Research question
 
@@ -39,18 +41,21 @@ Python reference → RTL simulation → bit-exact comparison (three levels: math
 
 RTL → synthesis → floorplan → placement → CTS → routing → DRC → LVS → GDSII. See [docs/physical_design.md](docs/physical_design.md).
 
+Sprint 4 baseline config is prepared for the active Version 1 accelerator at [designs/accelerator_int8_parallel/config.json](designs/accelerator_int8_parallel/config.json): `CLOCK_PORT` is `clk`, `CLOCK_PERIOD` is 20 ns, `FP_CORE_UTIL` is 35, and `PL_TARGET_DENSITY` is 0.50. The INT8 4-way baseline has been measured with OpenLane run `project_run_02`; curated PPA is in [results/int8_parallel/metrics.csv](results/int8_parallel/metrics.csv) and [results/int8_parallel/signoff.md](results/int8_parallel/signoff.md).
+
 ## Repository layout
 
 ```text
 algorithm/      Python golden model and test vectors (Phase 1)
-rtl/            Synthesizable Verilog / SystemVerilog (baseline: silicon_npu.sv, mac_core*.sv)
+rtl/            Active Version 1 accelerator RTL (accelerator_top.sv, processing_element.sv,
+                controller.sv, requantize.sv); inherited baseline RTL is reference-only
 verification/   Testbenches and reference vectors
 designs/        OpenLane configs per design variant (Experiment 0 / this project's own runs)
 flow/           SiliconNPU baseline's OpenLane orchestration (Makefile, config.tcl, openlane_config/)
 results/        Curated metrics and final GDS artifacts
 docs/           This project's architecture, verification, PD, research plan ("My Docs"),
                 including baseline_reference.md (single source of truth for the former docs1/)
-legacy/         Retired pre-baseline RTL (edge_ai_accelerator.sv, mac_unit.sv) and its testbenches
+                and architecture_spec.md (Version 1 accelerator port/FSM/memory-map contract)
 openmac/        Baseline's Python analysis/report-parsing library
 scripts/        Simulation and OpenLane helpers (this project's + baseline's)
 screenshots/    Baseline physical-design stage screenshots (placement, routing, power grid)

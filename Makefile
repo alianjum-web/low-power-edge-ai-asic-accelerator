@@ -14,11 +14,14 @@ WIDTH         ?= 8
 ARRAY_SIZE    ?= 4
 CLOCK_PERIOD  ?= 10.0
 UTILIZATION   ?= 60
-PDK_ROOT      ?=
+PDK_ROOT      ?= $(HOME)/.ciel
+PDK           ?= sky130A
+OPENLANE_ROOT ?= $(HOME)/OpenLane
+OPENLANE_IMAGE ?= ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64
 PRESET        ?= timing_4x4
 MODE          ?= synthesis
 
-.PHONY: help sim syn explore parse analyze dash all clean
+.PHONY: help sim syn explore parse analyze dash all mount clean
 
 help:
 	@echo "OpenMAC-PD Targets:"
@@ -31,6 +34,7 @@ help:
 	@echo "  make analyze                - Timing violation analysis"
 	@echo "  make dash                   - Generate PPA dashboard"
 	@echo "  make all                    - Full flow: sim -> syn -> explore -> parse -> dash"
+	@echo "  make mount                 - Open a project-mounted OpenLane container"
 	@echo "  make clean                  - Remove all run artifacts"
 	@echo ""
 	@echo "Parameters: WIDTH=$(WIDTH) ARRAY_SIZE=$(ARRAY_SIZE)"
@@ -58,6 +62,20 @@ dash:
 
 all:
 	python3 openmac.py all --width $(WIDTH) --array-size $(ARRAY_SIZE) --clock-period $(CLOCK_PERIOD) --utilization $(UTILIZATION)
+
+mount:
+	@test -d "$(OPENLANE_ROOT)" || { echo "ERROR: OpenLane checkout not found: $(OPENLANE_ROOT)" >&2; exit 1; }
+	@test -d "$(PDK_ROOT)" || { echo "ERROR: PDK root not found: $(PDK_ROOT)" >&2; exit 1; }
+	docker run --rm -it \
+		-v "$(CURDIR):/project" \
+		-v "$(OPENLANE_ROOT):/openlane" \
+		-v "$(PDK_ROOT):$(PDK_ROOT)" \
+		-e PDK_ROOT="$(PDK_ROOT)" \
+		-e PDK="$(PDK)" \
+		--user "$$(id -u):$$(id -g)" \
+		--network host \
+		--security-opt seccomp=unconfined \
+		"$(OPENLANE_IMAGE)" bash
 
 clean:
 	$(MAKE) -C verification clean

@@ -212,12 +212,12 @@ Use a project venv if you add dependencies; do not commit `.venv/`.
 
 ## Acceptance criteria
 
-- [ ] Research question, hypothesis, and metrics are written down.
-- [ ] Python GEMV + ReLU (+ requantize if Version 1 needs INT8 outputs) matches hand-computed cases.
-- [ ] Same integers will be reused in Sprint 3 (`Python result == RTL result`).
-- [ ] CSV baseline exists (even if accuracy is “N/A pending dataset”; then say so).
-- [ ] Architecture diagram or equivalent markdown figure exists.
-- [ ] No OpenLane run on unfinished accelerator RTL.
+- [x] Research question, hypothesis, and metrics are written down. (`docs/research_question.md`)
+- [x] Python GEMV + ReLU (+ requantize if Version 1 needs INT8 outputs) matches hand-computed cases. (`algorithm/reference_model.py` + `algorithm/quantization.py`, 8/8 in `algorithm/tests/test_reference_model.py`)
+- [ ] Same integers will be reused in Sprint 3 (`Python result == RTL result`). Vectors are generated and frozen (`verification/reference/vectors.{csv,hex}`); the RTL-side comparison itself is Sprint 3 work, not done here.
+- [x] CSV baseline exists (even if accuracy is "N/A pending dataset"; then say so). (`algorithm/baseline_results.csv`)
+- [x] Architecture diagram or equivalent markdown figure exists. (`docs/architecture.md`)
+- [x] No OpenLane run on unfinished accelerator RTL.
 
 ---
 

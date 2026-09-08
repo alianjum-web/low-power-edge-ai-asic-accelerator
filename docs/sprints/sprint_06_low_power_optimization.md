@@ -50,7 +50,7 @@ In **this** repo, the natural bit-width study is already framed as **INT8 vs INT
 - timing
 - accuracy
 
-Keep `mac_unit` shared/parameterized when bit-width is the only change ([research_methodology.md](../research_methodology.md)).
+Keep `mac_core` shared/parameterized when bit-width is the only change ([research_methodology.md](../research_methodology.md)).
 
 ### Option B: MAC architecture optimization
 
@@ -99,7 +99,7 @@ Write the choice in `docs/optimization_plan.md` (create this week) **before** lo
 ## Tasks a contributor can pick up
 
 1. Write `docs/optimization_plan.md`: technique, hypothesis, what stays constant, what changes.
-2. Parameterize `mac_unit` / top for INT4 or sequential schedule.
+2. Parameterize `mac_core` / top for INT4 or sequential schedule (it already has `WIDTH`/`ARRAY_SIZE` parameters — reuse them; do not fork a second MAC file per precision).
 3. Update Python golden model for INT4 (same vectors policy).
 4. Re-run **Sprint 3-style** tests on optimized RTL (bit-exact to the new Python).
 5. Do **not** declare PPA winners until Sprint 7 GDS/synth numbers exist.

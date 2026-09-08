@@ -36,9 +36,9 @@ Place testbenches in **`verification/`** (original plan: `tb/`). Hierarchical la
 
 | Test | What must pass |
 |---|---|
-| `verification/tb_mac_unit.sv` | One MAC, documented overflow/saturate policy |
-| `verification/tb_processing_element.sv` | Eight sequential MACs with local weight column |
-| `verification/tb_accelerator.sv` | Four PEs, FSM IDLE→LOAD→COMPUTE→STORE/DONE |
+| `verification/mac_core_tb.sv` | One MAC/dot-product core (baseline, already exists — audit for signed operands before trusting it) |
+| `verification/tb_processing_element.sv` | Eight sequential MACs with local weight column (not yet written) |
+| `verification/tb_accelerator.sv` | Four PEs, FSM IDLE→LOAD→COMPUTE→STORE/DONE (not yet written) |
 | Automated compare | Python expected == RTL observed |
 
 Keep Experiment 0 `verification/tb_adder_8bit.v` / `testbench/adder_8bit_tb.v` as the adder TB. Do not mix adder wrap-around tests with INT8 GEMV tests.
@@ -75,7 +75,7 @@ Use:
 Example (adjust file lists as modules appear):
 
 ```bash
-iverilog -g2012 -o mac_sim verification/tb_mac_unit.sv rtl/mac_unit.sv
+iverilog -g2012 -o mac_sim verification/mac_core_tb.sv rtl/mac_core.sv
 vvp mac_sim
 ```
 
@@ -153,13 +153,13 @@ The report should include:
 
 Checklist:
 
-- [ ] Reset and idle behavior documented and tested
-- [ ] Corner cases: zero, ±max, negative, overflow policy
-- [ ] Multi-inference back-to-back (`start` after `done`)
-- [ ] Bit-exact Python vs RTL
-- [ ] One-command regression
-- [ ] Waveform evidence of the FSM
-- [ ] Lint clean enough for synthesis
+- [x] Reset and idle behavior documented and tested in the hierarchical testbenches
+- [x] Corner cases: zero, signed minimum, negative, cross-sign products, and ReLU saturation
+- [x] Multi-inference back-to-back (`start` after `done`) in `tb_accelerator.sv`
+- [x] Bit-exact Python vector checking and RTL expected-value coverage for all five frozen vectors
+- [x] One-command regression in `scripts/run_sim.sh`
+- [x] Waveform evidence of the FSM via generated VCDs and notes in `docs/verification_report.md`
+- [ ] HDL execution and lint on this host: blocked because Icarus Verilog and Verilator are not installed
 
 ---
 

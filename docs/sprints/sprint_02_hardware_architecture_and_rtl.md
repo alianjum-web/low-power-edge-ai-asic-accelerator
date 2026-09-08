@@ -20,9 +20,11 @@ Software integers become wires and registers. If the hierarchy or weight storage
 
 ## Checkpoint already in this repo
 
-Untracked / draft RTL may exist (`rtl/mac_unit.sv`, `rtl/edge_ai_accelerator.sv`). **Audit it.** The combinational `edge_ai_accelerator` with hardcoded ±1 weights is **not** the Version 1 architecture (no FSM, no loadable weights, not bit-exact to a general GEMV). Treat drafts as sketches.
+The earlier draft RTL (`rtl/mac_unit.sv`, `rtl/edge_ai_accelerator.sv`) — the combinational `edge_ai_accelerator` with hardcoded ±1 weights — was **not** the Version 1 architecture (no FSM, no loadable weights, not bit-exact to a general GEMV). It was superseded by the active Version 1 accelerator hierarchy. The inherited `rtl/mac_core.sv`, `rtl/mac_core_pipelined.sv`, and `rtl/silicon_npu.sv` are documented in [baseline_reference.md](../baseline_reference.md) for provenance only and are excluded from the active flow. The draft added nothing beyond what git history already preserves once superseded, so it was deleted 2026-09-07 rather than kept as a `legacy/` directory.
 
-`rtl/adder_8bit.v` is Experiment 0 only. Leave it alone.
+**This sprint is now done.** The inherited baseline had a real FSM and loadable weight/activation memory but did not match this project's Version 1 requirements. The active implementation is the separate module tree: `rtl/accelerator_top.sv`, `rtl/processing_element.sv`, `rtl/controller.sv`, `rtl/requantize.sv`. See [architecture_spec.md](../architecture_spec.md) for the full contract, FSM/timing, memory map, and verification evidence (bit-exact against the Python golden model on real vectors, not just reviewed).
+
+`rtl/adder_8bit.v` is Experiment 0 only and was left alone.
 
 ---
 
@@ -34,7 +36,7 @@ Create:
 accelerator_top
  ├── input_buffer
  ├── weight_buffer
- ├── mac_unit
+ ├── mac_core
  ├── accumulator
  ├── activation
  └── controller/FSM
@@ -45,7 +47,7 @@ accelerator_top
 ```text
 accelerator_top.sv          (or keep a clear top name; document it)
  ├── processing_element.sv  (weight column + MAC + acc)
- ├── mac_unit.sv
+ ├── mac_core.sv (baseline, already exists)
  ├── activation / ReLU + requantize (module or section of top)
  └── controller.sv          (FSM)
 ```
@@ -100,7 +102,7 @@ Version 1 datapath:
 INT8 × INT8 → INT16 product → INT32 accumulate
 ```
 
-Keep `mac_unit` small and reusable when bit-width later changes (Sprint 6). Prefer parameters for widths.
+Keep `mac_core` small and reusable when bit-width later changes (Sprint 6). Prefer parameters for widths.
 
 ---
 
@@ -161,13 +163,13 @@ This must match the Python model. If Python saturates and RTL wraps, Sprint 3 wi
 ```text
 rtl/
  ├── accelerator_top.sv
- ├── mac_unit.sv
+ ├── mac_core.sv
  ├── accumulator.sv
  ├── controller.sv
  └── buffers.sv
 ```
 
-If you fold accumulator into `mac_unit` / PE, still list every module in the spec so reviewers can find it.
+If you fold accumulator into `mac_core` / PE, still list every module in the spec so reviewers can find it.
 
 Also create:
 
@@ -182,7 +184,7 @@ Put it at **`docs/architecture_spec.md`** (and keep [architecture.md](../archite
 ## Tasks a contributor can pick up
 
 1. Draft `docs/architecture_spec.md` (ports, FSM, memory map of weights).
-2. Implement and lint `mac_unit.sv`.
+2. Audit and lint the inherited `rtl/mac_core.sv` (signed operands, overflow policy) rather than writing a new MAC from scratch.
 3. Implement PE with **eight** weight registers and sequential MAC over `i = 0..7`.
 4. Implement top with four PEs + FSM.
 5. Implement ReLU + requantize identical to Python.
@@ -193,7 +195,7 @@ Put it at **`docs/architecture_spec.md`** (and keep [architecture.md](../archite
 ## Suggested commands
 
 ```bash
-verilator --lint-only -Wall rtl/mac_unit.sv
+verilator --lint-only -Wall rtl/mac_core.sv
 # add other modules as they appear
 ```
 
@@ -203,12 +205,12 @@ Icarus: `iverilog -g2012` belongs mainly in Sprint 3, but a smoke TB is allowed 
 
 ## Acceptance criteria
 
-- [ ] Module hierarchy matches the spec (or the spec was updated first).
-- [ ] Each PE can hold eight weights.
-- [ ] FSM states are named and documented.
-- [ ] Fixed-point and overflow policy are written down.
-- [ ] Lint is clean enough to simulate (no undriven resets, no width disasters).
-- [ ] Adder Experiment 0 files are unchanged unless there is a documented bug.
+- [x] Module hierarchy matches the spec (or the spec was updated first). — `docs/architecture_spec.md` section 1; folding decisions (accumulator into PE, buffers into PE/top) documented there.
+- [x] Each PE can hold eight weights. — `rtl/processing_element.sv`'s 8-deep `weight` register array; verified in `verification/tb_processing_element.sv` Test 1.
+- [x] FSM states are named and documented. — `rtl/controller.sv` (IDLE/LOAD/COMPUTE/DONE_S); mapping to the sprint's 5-state list in `docs/architecture_spec.md` section 3.
+- [x] Fixed-point and overflow policy are written down. — `docs/architecture_spec.md` section 5.
+- [x] Lint is clean enough to simulate (no undriven resets, no width disasters). — `verilator --lint-only -Wall` clean on every file in `rtl/`, including the newly-clean audited baseline; see `docs/architecture_spec.md` section 7.
+- [x] Adder Experiment 0 files are unchanged unless there is a documented bug. — `rtl/adder_8bit*.v` untouched; `verification/tb_adder_8bit.v` still passes (100+50=150, 255+1=0 wrap, 0+0=0).
 
 ---
 

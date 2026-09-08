@@ -1,5 +1,5 @@
 set ::env(DESIGN_NAME) "silicon_npu"
-set ::env(VERILOG_FILES) "/workspace/flow/src/silicon_npu.sv"
+set ::env(VERILOG_FILES) "dir::../rtl/silicon_npu.sv"
 set ::env(CLOCK_PERIOD) "20.0"
 set ::env(CLOCK_PORT) "clk"
 set ::env(CLOCK_NET) "clk"
