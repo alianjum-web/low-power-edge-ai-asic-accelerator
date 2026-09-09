@@ -41,7 +41,7 @@ Python reference → RTL simulation → bit-exact comparison (three levels: math
 
 RTL → synthesis → floorplan → placement → CTS → routing → DRC → LVS → GDSII. See [docs/physical_design.md](docs/physical_design.md).
 
-Sprint 4 baseline config is prepared for the active Version 1 accelerator at [designs/accelerator_int8_parallel/config.json](designs/accelerator_int8_parallel/config.json): `CLOCK_PORT` is `clk`, `CLOCK_PERIOD` is 20 ns, `FP_CORE_UTIL` is 35, and `PL_TARGET_DENSITY` is 0.50. The INT8 4-way baseline has been measured with OpenLane run `project_run_02`; curated PPA is in [results/int8_parallel/metrics.csv](results/int8_parallel/metrics.csv) and [results/int8_parallel/signoff.md](results/int8_parallel/signoff.md).
+The active Version 1 accelerator config is [designs/accelerator_int8_parallel/config.json](designs/accelerator_int8_parallel/config.json): `CLOCK_PORT` is `clk`, `CLOCK_PERIOD` is 20 ns, `FP_CORE_UTIL` is 35, and `PL_TARGET_DENSITY` is 0.50. The INT8 4-way baseline has been taken through the full RTL-to-GDSII chain with OpenLane run `project_run_02` (Sprint 5): DRC, LVS, XOR, routing, setup, and hold are clean; CTS is real (worst setup slack 3.74 ns, worst hold slack 0.16 ns); 23 pin / 19 net antenna violations and max-fanout warnings are documented, not silently dropped. Curated PPA is in [results/int8_parallel/metrics.csv](results/int8_parallel/metrics.csv), signoff detail in [results/int8_parallel/signoff.md](results/int8_parallel/signoff.md), the final GDS in `results/int8_parallel/accelerator_top_project_run_02.gds`, and floorplan/placement/routing screenshots rendered from that GDS in [screenshots/int8_parallel/](screenshots/int8_parallel/).
 
 ## Repository layout
 
@@ -58,7 +58,9 @@ docs/           This project's architecture, verification, PD, research plan ("M
                 and architecture_spec.md (Version 1 accelerator port/FSM/memory-map contract)
 openmac/        Baseline's Python analysis/report-parsing library
 scripts/        Simulation and OpenLane helpers (this project's + baseline's)
-screenshots/    Baseline physical-design stage screenshots (placement, routing, power grid)
+screenshots/    Physical-design screenshots: int8_parallel/ is the Version 1 accelerator
+                (Sprint 5, rendered from results/int8_parallel/); the rest are the
+                inherited SiliconNPU baseline, not this project's own accelerator
 tests/          Unit tests for openmac/
 ```
 

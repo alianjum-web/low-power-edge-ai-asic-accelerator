@@ -52,16 +52,16 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
    between a topic doc and the status doc as a sign the topic doc is
    stale, and fix it rather than picking whichever is convenient.
 
-## Current state (as of 2026-09-07 — verify against the status doc before relying on this)
+## Current state (as of 2026-09-08 — verify against the status doc before relying on this)
 
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Adder through OpenLane to GDSII (toolchain proof) | Done. `results/baseline/`, run tag `RUN_2026.08.30_06.36.00`. |
 | 1 | Python golden model, symmetric INT8, Version 1 | Done for Version 1: `algorithm/reference_model.py` + `quantization.py` (GEMV→bias→ReLU→requantize-to-INT8), 8/8 known-answer tests (`algorithm/tests/`), 5 deterministic vectors (`verification/reference/vectors.{csv,hex}`), `docs/research_question.md`, `algorithm/baseline_results.csv`. |
 | 2 | Smallest correct accelerator RTL + simulation | **Done for Version 1.** `rtl/accelerator_top.sv` (+ `processing_element.sv`, `controller.sv`, `requantize.sv`) implements 4 independent PEs, signed INT8x INT8 -> INT32 accumulate with bias preload, ReLU, and round-half-up requantize. Bit-exact against `algorithm/reference_model.forward()` on real golden vectors (`verification/tb_accelerator.sv`, 15/15 checks pass). Inherited baseline (`mac_core*.sv`, `silicon_npu.sv`) audited/signed-fixed and lint-clean but intentionally *not* restructured into the 4-PE shape — see `docs/architecture_spec.md`. |
-| 3 | Verified accelerator through OpenLane → GDSII | Not started for Version 1 (by design — Sprint 2 explicitly forbids OpenLane before Sprint 3's fuller bit-exact sweep passes). Baseline's own `mac_core`/`silicon_npu` variants were *reportedly* taken through OpenLane by the original SiliconNPU authors, unreproduced here — see `docs/baseline_reference.md`. |
-| 4 | INT8/INT4 × sequential/parallel four-point study | Not started. |
-| 5 | Package: figures, report, CV/SOP language | Structure ready; no numbers to report yet. |
+| 3 | Verified accelerator through OpenLane → GDSII | **Done for the INT8 4-way parallel baseline (2026-09-08, Sprint 4+5).** OpenLane `v1.0.2` run tag `project_run_02` completed synthesis → floorplan → PDN → placement → CTS → routing → parasitic extraction → STA → DRC → LVS → antenna → GDSII for `accelerator_top`. DRC 0, LVS 0, XOR 0, route/setup/hold violations 0; CTS is real (clocked, worst setup slack 3.74 ns, worst hold slack 0.16 ns); 23 pin / 19 net antenna violations and max-fanout warnings are documented follow-up, not silently cleared. Curated evidence: `results/int8_parallel/{metrics.csv,signoff.md,accelerator_top_project_run_02.gds}` and `screenshots/int8_parallel/`. See `docs/sprints/sprint_05_rtl_to_gdsii.md` "How to verify Sprint 5". Baseline's own `mac_core`/`silicon_npu` variants remain *reportedly* taken through OpenLane by the original SiliconNPU authors, unreproduced-by-this-project's-measurement — see `docs/baseline_reference.md`. |
+| 4 | INT8/INT4 × sequential/parallel four-point study | Not started. Do not begin until Sprint 6 — this baseline (INT8 parallel) is one of the four points, not the whole study. |
+| 5 | Package: figures, report, CV/SOP language | Structure ready; INT8-parallel baseline numbers exist, the other three variants don't yet — do not write final report language until all four are measured. |
 
 ## Hard rules
 
