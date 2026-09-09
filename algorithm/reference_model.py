@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Version 1 golden model: 8 inputs -> 4 output neurons -> ReLU -> 4 INT8 outputs.
+"""Version 1 golden model: 8 inputs -> 4 output neurons -> ReLU -> 4 output
+values, requantized to a signed `bits`-wide integer (default INT8):
 
-    y_j = ReLU( sum_i x_i * w_ij + b_j )   requantized to INT8
+    y_j = ReLU( sum_i x_i * w_ij + b_j )   requantized to INT`bits`
 
-x: (8,) signed INT8      W: (8, 4) signed INT8      b: (4,) signed INT32, optional
+x: (8,) signed int      W: (8, 4) signed int      b: (4,) signed INT32, optional
+x/W/y are INT8 by default (Version 1); pass bits=4 for the Sprint 6 INT4
+bit-width-optimization variant (docs/optimization_plan.md) — same GEMV +
+bias + ReLU, only the input/output quantization width changes, matching
+docs/quantization.md's "INT4 (Phase 4 only)" policy.
 
-The RTL built in later sprints must match these INT8 outputs bit-exactly
-on the vectors in verification/reference/ (see docs/verification.md).
+The RTL built in later sprints must match these outputs bit-exactly on
+the vectors in verification/reference/ (see docs/verification.md).
 """
 
 import numpy as np
 
-from quantization import INT8_MIN, INT8_MAX, requantize_int8
+from quantization import requantize
 
 
 def dense_int8(x, weights, bias=None):
@@ -37,16 +42,18 @@ def relu(x):
     return np.maximum(x, 0)
 
 
-def forward(x, weights, bias=None, shift=0):
-    """Full Version 1 pipeline: GEMV -> bias -> ReLU -> requantize to INT8.
+def forward(x, weights, bias=None, shift=0, bits=8):
+    """Full Version 1 pipeline: GEMV -> bias -> ReLU -> requantize.
 
-    Returns (acc_int32, y_int8). `shift` is the per-layer output scale
+    Returns (acc_int32, y). `shift` is the per-layer output scale
     (S = 2**shift) documented in algorithm/README.md; shift=0 means the
-    accumulator is saturated to INT8 without scaling.
+    accumulator is saturated without scaling. `bits` selects the output
+    (and, by convention, x/weight) quantization width -- 8 for Version 1
+    INT8, 4 for the Sprint 6 INT4 optimization variant.
     """
     acc = dense_int8(x, weights, bias)
     activated = relu(acc)
-    y = requantize_int8(activated, shift)
+    y = requantize(activated, shift, bits=bits)
     return acc, y
 
 

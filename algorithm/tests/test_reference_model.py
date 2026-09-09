@@ -15,7 +15,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from reference_model import dense_int8, forward, relu  # noqa: E402
-from quantization import requantize_int8  # noqa: E402
+from quantization import requantize_int8, requantize  # noqa: E402
 
 
 def test_all_zero():
@@ -136,6 +136,61 @@ def test_relu_zeroes_negative_and_passes_positive():
     assert list(relu(x)) == [0, 0, 5]
 
 
+# ---- Sprint 6: INT4 bit-width optimization variant (docs/optimization_plan.md) ----
+# Same GEMV/bias/ReLU/requantize pipeline as above, bits=4 instead of the
+# default 8. requantize_int8 is unchanged (still bits=8, verified above);
+# these exercise the new generic `requantize(..., bits=4)` path instead.
+
+
+def test_int4_requantize_saturates_at_int4_bounds():
+    """bits=4 must clip to [-8, 7], not [-128, 127]."""
+    assert list(requantize(np.array([200]), 0, bits=4)) == [7]
+    assert list(requantize(np.array([-200]), 0, bits=4)) == [-8]
+    assert list(requantize(np.array([7]), 0, bits=4)) == [7]     # boundary, no clip
+    assert list(requantize(np.array([8]), 0, bits=4)) == [7]     # just past boundary
+    assert list(requantize(np.array([-8]), 0, bits=4)) == [-8]   # boundary, no clip
+
+
+def test_int4_requantize_shift_rounding():
+    """Same round-half-up convention as INT8, just a narrower output clip.
+
+    acc=20, shift=2: (20 + 2) >> 2 = 22 >> 2 = 5
+    acc=100, shift=2: (100 + 2) >> 2 = 25 -> clipped to 7
+    """
+    assert list(requantize(np.array([20]), 2, bits=4)) == [5]
+    assert list(requantize(np.array([100]), 2, bits=4)) == [7]
+
+
+def test_int4_product_and_accumulator_do_not_overflow():
+    """Largest-magnitude INT4 x INT4 product and its 8-term sum, same
+    headroom argument as the INT8 test above but for n=4 (q_max=7).
+    """
+    worst_case_product = (-8) * (-8)  # largest-magnitude INT4 product
+    assert worst_case_product == 64
+
+    worst_case_sum_of_8 = 8 * worst_case_product
+    assert worst_case_sum_of_8 == 512
+
+    x = np.full(8, -8, dtype=np.int8)
+    w = np.full((8, 4), -8, dtype=np.int8)
+    acc = dense_int8(x, w)
+    assert list(acc) == [512, 512, 512, 512]
+
+
+def test_int4_forward_matches_int8_pipeline_shape():
+    """forward(..., bits=4) walks the identical GEMV -> bias -> ReLU path
+    as the INT8 default; only the requantize clip range should differ.
+    """
+    x = np.array([1, 2, 3, 4, 5, 6, 7, -8], dtype=np.int8)
+    w = np.ones((8, 4), dtype=np.int8)
+    b = np.zeros(4, dtype=np.int32)
+
+    acc, y = forward(x, w, b, shift=0, bits=4)
+
+    assert list(acc) == [20, 20, 20, 20]     # sum(1..7) - 8 = 20, same for every column
+    assert list(y) == [7, 7, 7, 7]           # 20 saturates to INT4_MAX
+
+
 ALL_TESTS = [
     test_all_zero,
     test_all_negative_accumulation_clips_to_zero_after_relu,
@@ -145,6 +200,10 @@ ALL_TESTS = [
     test_requantize_saturates_at_int8_bounds,
     test_requantize_shift_rounding,
     test_relu_zeroes_negative_and_passes_positive,
+    test_int4_requantize_saturates_at_int4_bounds,
+    test_int4_requantize_shift_rounding,
+    test_int4_product_and_accumulator_do_not_overflow,
+    test_int4_forward_matches_int8_pipeline_shape,
 ]
 
 
