@@ -36,10 +36,28 @@ run_tb tb_accelerator \
     "${ROOT_DIR}/rtl/accelerator_top.sv" "${ROOT_DIR}/rtl/controller.sv" \
     "${ROOT_DIR}/rtl/processing_element.sv" "${ROOT_DIR}/rtl/requantize.sv"
 
+# Sprint 6 bit-width optimization variant: same RTL, DATA_WIDTH=4 instead
+# of 8 (baked into tb_accelerator_int4.sv itself, not passed via -P, to
+# keep this a plain iverilog invocation like the run above). See
+# docs/optimization_plan.md.
+run_tb tb_accelerator_int4 \
+    "${ROOT_DIR}/verification/tb_accelerator_int4.sv" \
+    "${ROOT_DIR}/rtl/accelerator_top.sv" "${ROOT_DIR}/rtl/controller.sv" \
+    "${ROOT_DIR}/rtl/processing_element.sv" "${ROOT_DIR}/rtl/requantize.sv"
+
 if command -v verilator >/dev/null 2>&1; then
-    echo "=== Verilator lint ==="
+    echo "=== Verilator lint (INT8, DATA_WIDTH=8 default) ==="
     verilator --lint-only -Wall --timing \
         --top-module accelerator_top \
+        "${ROOT_DIR}/rtl/controller.sv" \
+        "${ROOT_DIR}/rtl/processing_element.sv" \
+        "${ROOT_DIR}/rtl/requantize.sv" \
+        "${ROOT_DIR}/rtl/accelerator_top.sv"
+
+    echo "=== Verilator lint (INT4 variant, DATA_WIDTH=4) ==="
+    verilator --lint-only -Wall --timing \
+        --top-module accelerator_top \
+        -GDATA_WIDTH=4 -GNUM_INPUTS=8 -GNUM_NEURONS=4 -GACC_WIDTH=32 -GSHIFT_WIDTH=5 \
         "${ROOT_DIR}/rtl/controller.sv" \
         "${ROOT_DIR}/rtl/processing_element.sv" \
         "${ROOT_DIR}/rtl/requantize.sv" \
