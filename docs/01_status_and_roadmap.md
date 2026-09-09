@@ -47,14 +47,22 @@ From `results/baseline/metrics.csv`:
 | 2 | Smallest correct accelerator: SV + simulation | **Complete for Version 1 (2026-09-07):** `rtl/accelerator_top.sv` + `rtl/processing_element.sv` + `rtl/controller.sv` + `rtl/requantize.sv` implement the 4-PE, signed INT8, bias+ReLU+requantize accelerator. The checked-in accelerator TB covers all 5 frozen vectors (20 accumulator/output checks), and `scripts/check_reference_vectors.py` confirms the CSV against `algorithm/reference_model.forward()`. Baseline RTL (`mac_core*.sv`, `silicon_npu.sv`) is audited and signed-fixed. HDL execution/lint still requires Icarus Verilog/Verilator on the host. See [architecture_spec.md](architecture_spec.md). |
 | 3 | Verified accelerator through OpenLane → GDSII | **Complete for the INT8 parallel baseline (2026-09-08):** OpenLane `project_run_02` completed through GDS, LVS, DRC, ARC, and ERC for `accelerator_top`. Curated metrics, signoff notes, and the final GDS are in `results/int8_parallel/`. DRC, LVS, XOR, route, setup, and hold checks are clean; 23 pin and 19 net antenna violations plus max-fanout warnings remain documented for follow-up. |
 | 4 | INT8/INT4 × sequential/parallel experiments | **Parallel axis complete (Sprint 7, 2026-09-08):** INT8 -> INT4 on the same 4-way-parallel schedule, one axis (see [optimization_plan.md](optimization_plan.md)). `int4_parallel` closed through OpenLane to GDSII (`project_run_01`) — DRC/LVS/XOR/route/setup-hold clean. Getting there required a wrapper module (`designs/accelerator_int4_parallel/accelerator_top_int4.sv`) after OpenLane's `SYNTH_PARAMETERS`/`chparam` mechanism turned out to leave `y_out`/`busy`/`done` undriven on this toolchain — see [ppa_comparison.md](ppa_comparison.md). `results/comparison.csv` now has measured area (-29.9%), power/energy (-62.8%), and synthetic accuracy (-9.4 points) for `int8_parallel` vs. `int4_parallel`; the sequential-schedule axis (`int8_sequential`, `int4_sequential`) remains deferred/out of scope. |
-| 5 | Package: GitHub, figures, report, CV/SOP | Structure ready; no remote yet |
+| 5 | Package: GitHub, figures, report, CV/SOP | **Complete (Sprint 8, 2026-09-09):** ten required figures in [figures/](figures/) (system/MAC architecture diagrams, RTL waveform from `tb_accelerator.vcd`, baseline floorplan/placement/routing rendered directly from `results/int8_parallel/*.gds`, INT8-vs-INT4 final-GDSII/PPA/accuracy/trade-off comparisons), technical report in [report/report.md](report/report.md), root `README.md` results table filled in from `results/comparison.csv`. Sequential-schedule variants remain an explicit scope cut, documented as such rather than left as silent TBDs. CV/SOP paragraph still deferred — see [research_methodology.md](research_methodology.md)'s "only after a real dataset" condition, unmet. |
 
-## Do not do next
+## Do not do next (historical — Phase 0/1 era; superseded, kept for context)
 
-- Do not put a supplied `accelerator_top` through OpenLane until it exists here and passes a functional audit.
-- Do not start INT4 or the four-variant matrix.
-- Do not optimize power yet.
-- Do not write the research paper yet.
+These four gates governed early sprints and have all been passed as of Sprint 8 (2026-09-09): `accelerator_top` was built, audited, and verified in this repo before its first OpenLane run (Sprint 2-3); the INT4 axis was implemented and measured (Sprint 6-7, one-axis scope cut documented in [research_methodology.md](research_methodology.md)); the report exists ([report/report.md](report/report.md)). Left here so a reader of the project's history understands why early sprints were sequenced this way, not as current instructions.
+
+- ~~Do not put a supplied `accelerator_top` through OpenLane until it exists here and passes a functional audit.~~
+- ~~Do not start INT4 or the four-variant matrix.~~
+- ~~Do not optimize power yet.~~
+- ~~Do not write the research paper yet.~~
+
+## What's actually left (post-Sprint-8)
+
+- CV/SOP paragraph in [research_methodology.md](research_methodology.md) — still gated on adopting a real dataset (current accuracy numbers are synthetic quantization-noise, not task accuracy).
+- Sequential-schedule variants (`int8_sequential`, `int4_sequential`) — optional follow-on, explicitly out of scope for this project's timeline, not a defect.
+- Anything under "After Week 8" in [sprints/sprint_08_research_package.md](sprints/sprint_08_research_package.md): conference-style paper draft, research proposal, or a second optimization axis.
 
 ## Eight-week execution plan
 
@@ -77,9 +85,9 @@ Phases in the table above still describe *what* is true of the repo. Sprints des
 9. Compare Python and RTL automatically. (the five frozen vectors are checked against Python by `scripts/check_reference_vectors.py`; the accelerator TB checks all five rows in RTL once Icarus is installed)
 10. Only after functional correctness, run OpenLane. (done 2026-09-08 for INT8 parallel)
 11. Extract area / power / timing. (done 2026-09-08 for INT8 parallel; see `results/int8_parallel/metrics.csv`)
-12. Build sequential and INT4 variants.
-13. Run the controlled research experiment.
-14. Produce paper-quality results.
+12. Build sequential and INT4 variants. (INT4 done 2026-09-08 for the 4-way-parallel schedule, Sprint 7; sequential axis descoped, see Phase 4 above.)
+13. Run the controlled research experiment. (done 2026-09-08 for the one-axis INT8-vs-INT4 comparison, Sprint 7: see [ppa_comparison.md](ppa_comparison.md))
+14. Produce paper-quality results. (done 2026-09-09, Sprint 8: figures, tables, and technical report — see [figures/](figures/) and [report/report.md](report/report.md))
 
 ## Technical issues already identified (before silicon)
 

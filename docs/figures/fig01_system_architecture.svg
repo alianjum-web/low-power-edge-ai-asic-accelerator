@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" font-family="Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#333333"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1500" height="980" fill="#ffffff"/>
+  <text x="750" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#1a1a1a">System architecture — accelerator_top (Version 1)</text>
+  <text x="750" y="58" text-anchor="middle" font-size="14" fill="#555555">8 inputs -&gt; 4 output neurons -&gt; ReLU -&gt; 4 INT_DATA_WIDTH outputs, 32 MACs/inference (DATA_WIDTH=8 baseline, DATA_WIDTH=4 optimized)</text>
+
+  <!-- Host write ports (left) -->
+  <g>
+    <rect x="20" y="120" width="190" height="200" rx="8" fill="#eef3fb" stroke="#3a6fb0" stroke-width="1.5"/>
+    <text x="115" y="145" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a4a80">Host write ports</text>
+    <text x="35" y="170" font-size="12" fill="#1a1a1a">weight_wr_en/pe/idx/data</text>
+    <text x="35" y="192" font-size="12" fill="#1a1a1a">act_wr_en/idx/data</text>
+    <text x="35" y="214" font-size="12" fill="#1a1a1a">bias_wr_en/pe/data</text>
+    <text x="35" y="236" font-size="12" fill="#1a1a1a">shift_in [4:0]</text>
+    <text x="35" y="258" font-size="12" fill="#1a1a1a">start</text>
+    <text x="35" y="290" font-size="11" fill="#555555">Writes take effect while</text>
+    <text x="35" y="305" font-size="11" fill="#555555">busy=0 (IDLE / DONE_S)</text>
+  </g>
+
+  <!-- act_mem -->
+  <rect x="260" y="140" width="150" height="80" rx="6" fill="#fdf3e0" stroke="#c98a12" stroke-width="1.5"/>
+  <text x="335" y="165" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a5300">act_mem</text>
+  <text x="335" y="182" text-anchor="middle" font-size="11" fill="#333333">8-deep, shared</text>
+  <text x="335" y="197" text-anchor="middle" font-size="11" fill="#333333">broadcast x_i</text>
+
+  <!-- controller -->
+  <rect x="260" y="260" width="150" height="130" rx="6" fill="#fdeef0" stroke="#b0303f" stroke-width="1.5"/>
+  <text x="335" y="284" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a1a24">controller</text>
+  <text x="335" y="302" text-anchor="middle" font-size="11" fill="#333333">FSM: IDLE -&gt; LOAD -&gt;</text>
+  <text x="335" y="317" text-anchor="middle" font-size="11" fill="#333333">COMPUTE x8 -&gt; DONE_S</text>
+  <text x="335" y="340" text-anchor="middle" font-size="11" fill="#333333">out: mac_idx, acc_clear,</text>
+  <text x="335" y="355" text-anchor="middle" font-size="11" fill="#333333">mac_en, busy, done</text>
+
+  <!-- 4 PEs -->
+  <g font-size="11">
+    <!-- PE0 -->
+    <rect x="470" y="110" width="230" height="110" rx="6" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.5"/>
+    <text x="585" y="132" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d5423">processing_element[0]</text>
+    <text x="585" y="150" text-anchor="middle" fill="#333333">weight[0..7] (8 signed regs)</text>
+    <text x="585" y="166" text-anchor="middle" fill="#333333">acc &lt;= acc_clear ? bias_in</text>
+    <text x="585" y="181" text-anchor="middle" fill="#333333">&#160;&#160;&#160;&#160;&#160;&#160;: acc + x_in*weight[mac_idx]</text>
+    <text x="585" y="200" text-anchor="middle" fill="#333333">acc_out [31:0] -&gt; neuron 0</text>
+
+    <!-- PE1 -->
+    <rect x="470" y="235" width="230" height="110" rx="6" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.5"/>
+    <text x="585" y="257" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d5423">processing_element[1]</text>
+    <text x="585" y="275" text-anchor="middle" fill="#333333">weight[0..7] (8 signed regs)</text>
+    <text x="585" y="291" text-anchor="middle" fill="#333333">same MAC datapath as PE0</text>
+    <text x="585" y="307" text-anchor="middle" fill="#333333">independent weight column</text>
+    <text x="585" y="325" text-anchor="middle" fill="#333333">acc_out [31:0] -&gt; neuron 1</text>
+
+    <!-- PE2 -->
+    <rect x="470" y="360" width="230" height="110" rx="6" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.5"/>
+    <text x="585" y="382" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d5423">processing_element[2]</text>
+    <text x="585" y="400" text-anchor="middle" fill="#333333">weight[0..7] (8 signed regs)</text>
+    <text x="585" y="416" text-anchor="middle" fill="#333333">same MAC datapath as PE0</text>
+    <text x="585" y="432" text-anchor="middle" fill="#333333">independent weight column</text>
+    <text x="585" y="450" text-anchor="middle" fill="#333333">acc_out [31:0] -&gt; neuron 2</text>
+
+    <!-- PE3 -->
+    <rect x="470" y="485" width="230" height="110" rx="6" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.5"/>
+    <text x="585" y="507" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d5423">processing_element[3]</text>
+    <text x="585" y="525" text-anchor="middle" fill="#333333">weight[0..7] (8 signed regs)</text>
+    <text x="585" y="541" text-anchor="middle" fill="#333333">same MAC datapath as PE0</text>
+    <text x="585" y="557" text-anchor="middle" fill="#333333">independent weight column</text>
+    <text x="585" y="575" text-anchor="middle" fill="#333333">acc_out [31:0] -&gt; neuron 3</text>
+  </g>
+
+  <!-- bias mem -->
+  <rect x="470" y="620" width="230" height="60" rx="6" fill="#fdf3e0" stroke="#c98a12" stroke-width="1.5"/>
+  <text x="585" y="644" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a5300">bias_mem</text>
+  <text x="585" y="662" text-anchor="middle" font-size="11" fill="#333333">4-deep, one INT32 bias per PE</text>
+
+  <!-- requantize x4 -->
+  <g font-size="11">
+    <rect x="800" y="110" width="210" height="60" rx="6" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.5"/>
+    <text x="905" y="132" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d1f80">requantize[0]</text>
+    <text x="905" y="150" text-anchor="middle" fill="#333333">ReLU -&gt; shift/round -&gt; saturate</text>
+
+    <rect x="800" y="235" width="210" height="60" rx="6" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.5"/>
+    <text x="905" y="257" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d1f80">requantize[1]</text>
+    <text x="905" y="275" text-anchor="middle" fill="#333333">ReLU -&gt; shift/round -&gt; saturate</text>
+
+    <rect x="800" y="360" width="210" height="60" rx="6" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.5"/>
+    <text x="905" y="382" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d1f80">requantize[2]</text>
+    <text x="905" y="400" text-anchor="middle" fill="#333333">ReLU -&gt; shift/round -&gt; saturate</text>
+
+    <rect x="800" y="485" width="210" height="60" rx="6" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.5"/>
+    <text x="905" y="507" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d1f80">requantize[3]</text>
+    <text x="905" y="525" text-anchor="middle" fill="#333333">ReLU -&gt; shift/round -&gt; saturate</text>
+  </g>
+
+  <!-- y_out -->
+  <rect x="1080" y="260" width="180" height="150" rx="6" fill="#e9f4f8" stroke="#1b7a8c" stroke-width="1.5"/>
+  <text x="1170" y="290" text-anchor="middle" font-size="13" font-weight="bold" fill="#0e4550">y_out</text>
+  <text x="1170" y="312" text-anchor="middle" font-size="11" fill="#333333">[NUM_NEURONS*DATA_WIDTH-1:0]</text>
+  <text x="1170" y="332" text-anchor="middle" font-size="11" fill="#333333">packed low-to-high,</text>
+  <text x="1170" y="350" text-anchor="middle" font-size="11" fill="#333333">one lane per neuron</text>
+  <text x="1170" y="372" text-anchor="middle" font-size="11" fill="#333333">valid while done=1</text>
+
+  <!-- status out -->
+  <rect x="260" y="770" width="150" height="70" rx="6" fill="#fdeef0" stroke="#b0303f" stroke-width="1.5"/>
+  <text x="335" y="795" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a1a24">status</text>
+  <text x="335" y="815" text-anchor="middle" font-size="11" fill="#333333">busy, done</text>
+
+  <!-- arrows: host to act_mem/controller/bias -->
+  <path d="M210,175 L258,175" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <path d="M210,260 L258,300" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <path d="M115,320 L115,650 L468,650" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- act_mem broadcast to 4 PEs -->
+  <path d="M410,180 C 445,180 445,165 470,165" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,190 C 445,190 445,290 470,290" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,200 C 445,200 445,415 470,415" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,210 C 445,210 445,540 470,540" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <text x="420" y="120" font-size="10" fill="#555555">x_broadcast [7:0] to all 4 PEs</text>
+
+  <!-- controller to PEs (mac_idx/acc_clear/mac_en) -->
+  <path d="M410,300 C 440,300 440,150 468,150" stroke="#7a1a24" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,310 C 440,310 440,275 468,275" stroke="#7a1a24" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,320 C 440,320 440,400 468,400" stroke="#7a1a24" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)" fill="none"/>
+  <path d="M410,330 C 440,330 440,525 468,525" stroke="#7a1a24" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)" fill="none"/>
+  <text x="420" y="230" font-size="10" fill="#7a1a24">mac_idx, acc_clear, mac_en (broadcast control)</text>
+
+  <!-- bias_mem to PEs -->
+  <path d="M585,620 L585,600" stroke="#333333" stroke-width="1.2" marker-end="url(#arrow)" fill="none"/>
+  <path d="M540,620 C 460,620 460,440 468,410" stroke="#333333" stroke-width="1.1" marker-end="url(#arrow)" fill="none"/>
+  <path d="M540,620 C 445,620 445,300 468,285" stroke="#333333" stroke-width="1.1" marker-end="url(#arrow)" fill="none"/>
+  <path d="M630,620 C 720,620 720,470 700,455" stroke="#333333" stroke-width="1.1" marker-end="url(#arrow)" fill="none"/>
+  <text x="710" y="660" font-size="10" fill="#555555">bias_in per PE (preloaded on acc_clear)</text>
+
+  <!-- PE to requantize -->
+  <path d="M700,165 L798,140" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M700,290 L798,265" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M700,415 L798,390" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M700,540 L798,515" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <text x="710" y="100" font-size="10" fill="#555555">acc_out [31:0] (post-bias accumulator)</text>
+
+  <!-- requantize to y_out -->
+  <path d="M1010,140 C 1050,140 1050,300 1078,310" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M1010,265 C 1050,265 1050,320 1078,325" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M1010,390 C 1050,390 1050,345 1078,340" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M1010,515 C 1050,515 1050,360 1078,355" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- controller to status -->
+  <path d="M335,390 L335,768" stroke="#333333" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- legend -->
+  <g font-size="11">
+    <rect x="1080" y="470" width="16" height="12" fill="#eaf6ec" stroke="#2f7d3a"/>
+    <text x="1102" y="480" fill="#333333">processing element (x4, one per output neuron)</text>
+    <rect x="1080" y="494" width="16" height="12" fill="#fdeef0" stroke="#b0303f"/>
+    <text x="1102" y="504" fill="#333333">shared control FSM</text>
+    <rect x="1080" y="518" width="16" height="12" fill="#fdf3e0" stroke="#c98a12"/>
+    <text x="1102" y="528" fill="#333333">shared write-addressable memories</text>
+    <rect x="1080" y="542" width="16" height="12" fill="#efeafc" stroke="#6a3fb0"/>
+    <text x="1102" y="552" fill="#333333">per-lane output requantize</text>
+  </g>
+
+  <text x="20" y="960" font-size="11" fill="#777777">rtl/accelerator_top.sv + controller.sv + processing_element.sv x4 + requantize.sv x4 — see docs/architecture_spec.md</text>
+</svg>

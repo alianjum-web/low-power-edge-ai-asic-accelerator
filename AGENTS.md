@@ -52,7 +52,7 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
    between a topic doc and the status doc as a sign the topic doc is
    stale, and fix it rather than picking whichever is convenient.
 
-## Current state (as of 2026-09-08 — verify against the status doc before relying on this)
+## Current state (as of 2026-09-09 — verify against the status doc before relying on this)
 
 | Phase | Goal | Status |
 |---|---|---|
@@ -60,8 +60,8 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
 | 1 | Python golden model, symmetric INT8, Version 1 | Done for Version 1: `algorithm/reference_model.py` + `quantization.py` (GEMV→bias→ReLU→requantize-to-INT8), 8/8 known-answer tests (`algorithm/tests/`), 5 deterministic vectors (`verification/reference/vectors.{csv,hex}`), `docs/research_question.md`, `algorithm/baseline_results.csv`. |
 | 2 | Smallest correct accelerator RTL + simulation | **Done for Version 1.** `rtl/accelerator_top.sv` (+ `processing_element.sv`, `controller.sv`, `requantize.sv`) implements 4 independent PEs, signed INT8x INT8 -> INT32 accumulate with bias preload, ReLU, and round-half-up requantize. Bit-exact against `algorithm/reference_model.forward()` on real golden vectors (`verification/tb_accelerator.sv`, 15/15 checks pass). Inherited baseline (`mac_core*.sv`, `silicon_npu.sv`) audited/signed-fixed and lint-clean but intentionally *not* restructured into the 4-PE shape — see `docs/architecture_spec.md`. |
 | 3 | Verified accelerator through OpenLane → GDSII | **Done for the INT8 4-way parallel baseline (2026-09-08, Sprint 4+5).** OpenLane `v1.0.2` run tag `project_run_02` completed synthesis → floorplan → PDN → placement → CTS → routing → parasitic extraction → STA → DRC → LVS → antenna → GDSII for `accelerator_top`. DRC 0, LVS 0, XOR 0, route/setup/hold violations 0; CTS is real (clocked, worst setup slack 3.74 ns, worst hold slack 0.16 ns); 23 pin / 19 net antenna violations and max-fanout warnings are documented follow-up, not silently cleared. Curated evidence: `results/int8_parallel/{metrics.csv,signoff.md,accelerator_top_project_run_02.gds}` and `screenshots/int8_parallel/`. See `docs/sprints/sprint_05_rtl_to_gdsii.md` "How to verify Sprint 5". Baseline's own `mac_core`/`silicon_npu` variants remain *reportedly* taken through OpenLane by the original SiliconNPU authors, unreproduced-by-this-project's-measurement — see `docs/baseline_reference.md`. |
-| 4 | INT8/INT4 × sequential/parallel four-point study | Not started. Do not begin until Sprint 6 — this baseline (INT8 parallel) is one of the four points, not the whole study. |
-| 5 | Package: figures, report, CV/SOP language | Structure ready; INT8-parallel baseline numbers exist, the other three variants don't yet — do not write final report language until all four are measured. |
+| 4 | INT8/INT4 × sequential/parallel four-point study | **Parallel axis complete (Sprint 7, 2026-09-08).** `int4_parallel` closed through OpenLane to GDSII (`project_run_01`), DRC/LVS/XOR/route/setup-hold clean — see `results/int4_parallel/`. `results/comparison.csv` has measured area (-29.9%), power/energy (-62.8%), and synthetic accuracy (-9.4 pts) for `int8_parallel` vs `int4_parallel`. The sequential-schedule axis (`int8_sequential`, `int4_sequential`) was deliberately descoped in Sprint 6 (`docs/optimization_plan.md`, "one axis only") — this is a pre-registered scope cut, not unfinished work; do not silently start it without re-reading that doc's reasoning first. |
+| 5 | Package: figures, report, CV/SOP language | **Figures and report complete (Sprint 8, 2026-09-09).** Ten required figures in `docs/figures/` (+3 supplemental), technical report in `docs/report/report.md`, root `README.md` results table filled in from `results/comparison.csv`. CV/SOP paragraph in `docs/research_methodology.md` remains deliberately unwritten — gated on adopting a real dataset (current accuracy numbers are synthetic quantization-noise, not task accuracy). |
 
 ## Hard rules
 
@@ -80,9 +80,14 @@ bigger one): **8 inputs → 4 output neurons → ReLU → 4 INT8 outputs**,
 - **Symmetric signed INT8, zero-point 0, everywhere for Version 1.**
   Do not introduce asymmetric unsigned 0–255 activations — it breaks
   bit-exact Python/RTL comparison (`docs/quantization.md`).
-- **Exactly four hardware variants, no more:** INT8-sequential,
+- **Exactly four hardware variants in the matrix, no more:** INT8-sequential,
   INT8-4way-parallel, INT4-sequential, INT4-4way-parallel. Not five
-  variants, not a broader design-space sweep, not INT4 before Phase 4.
+  variants, not a broader design-space sweep. Two of the four
+  (INT8-4way-parallel, INT4-4way-parallel) are measured; the two
+  sequential-schedule cells were deliberately descoped in Sprint 6
+  (`docs/optimization_plan.md`) to fit the project timeline — that is a
+  recorded scope decision, not something to "finish" without the user
+  asking for it.
 - **No large neural network, custom PDK, fabrication, or CPU.** Out of
   scope, see `docs/research_question.md`.
 - **Keep work inside the existing folders** — `algorithm/`, `rtl/`,

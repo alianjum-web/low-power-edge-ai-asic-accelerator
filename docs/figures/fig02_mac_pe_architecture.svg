@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="760" viewBox="0 0 1300 760" font-family="Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow2" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#333333"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1300" height="760" fill="#ffffff"/>
+  <text x="650" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#1a1a1a">MAC / processing_element architecture (per neuron)</text>
+  <text x="650" y="58" text-anchor="middle" font-size="14" fill="#555555">Signed INT-DATA_WIDTH x INT-DATA_WIDTH -&gt; INT16 product -&gt; INT32 accumulate, one MAC cycle per COMPUTE tick (8 cycles/inference)</text>
+
+  <!-- weight register file -->
+  <rect x="60" y="130" width="230" height="330" rx="8" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.6"/>
+  <text x="175" y="155" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d5423">weight[0..7]</text>
+  <text x="175" y="172" text-anchor="middle" font-size="11" fill="#333333">8 x signed DATA_WIDTH regs</text>
+  <g font-size="11" fill="#1d5423">
+    <rect x="90" y="185" width="170" height="26" fill="#ffffff" stroke="#2f7d3a"/>
+    <text x="175" y="202" text-anchor="middle">weight[0] = w0j</text>
+    <rect x="90" y="215" width="170" height="26" fill="#ffffff" stroke="#2f7d3a"/>
+    <text x="175" y="232" text-anchor="middle">weight[1] = w1j</text>
+    <rect x="90" y="245" width="170" height="26" fill="#ffffff" stroke="#2f7d3a"/>
+    <text x="175" y="262" text-anchor="middle">weight[2] = w2j</text>
+    <text x="175" y="285" text-anchor="middle" font-size="16" fill="#555555">...</text>
+    <rect x="90" y="298" width="170" height="26" fill="#ffffff" stroke="#2f7d3a"/>
+    <text x="175" y="315" text-anchor="middle">weight[7] = w7j</text>
+  </g>
+  <text x="175" y="345" text-anchor="middle" font-size="11" fill="#333333">write: weight_wr_en/idx/data</text>
+  <text x="175" y="362" text-anchor="middle" font-size="11" fill="#333333">read select: mac_idx (0..7)</text>
+  <rect x="90" y="380" width="170" height="30" rx="4" fill="#fdf3e0" stroke="#c98a12"/>
+  <text x="175" y="399" text-anchor="middle" font-size="11" fill="#7a5300">weight[mac_idx]</text>
+
+  <!-- multiplier -->
+  <circle cx="420" cy="260" r="42" fill="#fdeef0" stroke="#b0303f" stroke-width="1.8"/>
+  <text x="420" y="255" text-anchor="middle" font-size="20" font-weight="bold" fill="#7a1a24">&#215;</text>
+  <text x="420" y="272" text-anchor="middle" font-size="10" fill="#7a1a24">signed</text>
+
+  <!-- x_in -->
+  <rect x="60" y="60" width="150" height="46" rx="6" fill="#e9f4f8" stroke="#1b7a8c" stroke-width="1.5"/>
+  <text x="135" y="82" text-anchor="middle" font-size="12" font-weight="bold" fill="#0e4550">x_in [DATA_WIDTH-1:0]</text>
+  <text x="135" y="98" text-anchor="middle" font-size="10" fill="#333333">broadcast activation</text>
+
+  <!-- product -->
+  <rect x="520" y="235" width="150" height="50" rx="6" fill="#fdeef0" stroke="#b0303f" stroke-width="1.5"/>
+  <text x="595" y="255" text-anchor="middle" font-size="11" font-weight="bold" fill="#7a1a24">product</text>
+  <text x="595" y="272" text-anchor="middle" font-size="10" fill="#333333">signed INT(2xDATA_WIDTH)</text>
+
+  <!-- adder -->
+  <circle cx="770" cy="260" r="42" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.8"/>
+  <text x="770" y="270" text-anchor="middle" font-size="24" font-weight="bold" fill="#3d1f80">+</text>
+
+  <!-- bias mux -->
+  <polygon points="820,220 900,235 900,285 820,300" fill="#fdf3e0" stroke="#c98a12" stroke-width="1.6"/>
+  <text x="860" y="255" text-anchor="middle" font-size="10" fill="#7a5300">acc_clear</text>
+  <text x="860" y="270" text-anchor="middle" font-size="10" fill="#7a5300">? bias_in</text>
+  <text x="860" y="283" text-anchor="middle" font-size="10" fill="#7a5300">: sum</text>
+
+  <!-- bias_in -->
+  <rect x="820" y="120" width="150" height="46" rx="6" fill="#e9f4f8" stroke="#1b7a8c" stroke-width="1.5"/>
+  <text x="895" y="142" text-anchor="middle" font-size="12" font-weight="bold" fill="#0e4550">bias_in [31:0]</text>
+  <text x="895" y="158" text-anchor="middle" font-size="10" fill="#333333">preload on acc_clear</text>
+
+  <!-- acc register -->
+  <rect x="960" y="200" width="180" height="120" rx="8" fill="#eaf6ec" stroke="#2f7d3a" stroke-width="1.8"/>
+  <text x="1050" y="228" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d5423">acc</text>
+  <text x="1050" y="248" text-anchor="middle" font-size="11" fill="#333333">signed ACC_WIDTH=32</text>
+  <text x="1050" y="266" text-anchor="middle" font-size="11" fill="#333333">registered, always_ff</text>
+  <text x="1050" y="284" text-anchor="middle" font-size="11" fill="#333333">@ posedge clk</text>
+  <text x="1050" y="302" text-anchor="middle" font-size="11" fill="#333333">-&gt; acc_out</text>
+
+  <!-- feedback loop acc -> adder -->
+  <path d="M1000,320 C 900,400 800,400 770,304" stroke="#333333" stroke-width="1.4" fill="none" marker-end="url(#arrow2)"/>
+  <text x="880" y="420" text-anchor="middle" font-size="10" fill="#555555">acc feeds back into + every COMPUTE cycle</text>
+
+  <!-- acc_out to requantize (below) -->
+  <rect x="990" y="420" width="220" height="70" rx="6" fill="#efeafc" stroke="#6a3fb0" stroke-width="1.6"/>
+  <text x="1100" y="445" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d1f80">acc_out -&gt; requantize</text>
+  <text x="1100" y="463" text-anchor="middle" font-size="10" fill="#333333">ReLU, then round-half-up</text>
+  <text x="1100" y="478" text-anchor="middle" font-size="10" fill="#333333">shift + saturate to INT_DATA_WIDTH</text>
+
+  <!-- control signals box -->
+  <rect x="60" y="540" width="1150" height="150" rx="8" fill="#fdeef0" stroke="#b0303f" stroke-width="1.4"/>
+  <text x="90" y="565" font-size="13" font-weight="bold" fill="#7a1a24">Control (from controller, shared across all 4 PEs)</text>
+  <text x="90" y="592" font-size="12" fill="#333333">mac_idx [2:0]  — selects weight[mac_idx] this cycle (0..7, one per COMPUTE cycle)</text>
+  <text x="90" y="616" font-size="12" fill="#333333">mac_en          — this PE accumulates: acc &lt;= acc + x_in * weight[mac_idx]</text>
+  <text x="90" y="640" font-size="12" fill="#333333">acc_clear       — LOAD cycle only: acc &lt;= bias_in  (bias preload, overrides mac_en)</text>
+  <text x="90" y="664" font-size="12" fill="#333333">weight_wr_en/idx/data — host loads this PE's 8-deep weight column while busy=0</text>
+
+  <!-- Arrows -->
+  <path d="M135,106 L135,175 L200,175" stroke="#333333" stroke-width="1.5" fill="none"/>
+  <path d="M135,106 C 135,180 300,220 380,250" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M260,395 L378,268" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M462,260 L518,260" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M670,260 L728,260" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M812,260 L818,260" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M895,166 L895,220" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M900,260 L958,260" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+  <path d="M1050,320 L1050,418" stroke="#333333" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"/>
+
+  <text x="20" y="735" font-size="11" fill="#777777">rtl/processing_element.sv — instantiated x4 by accelerator_top.sv, one per output neuron; see docs/architecture_spec.md sections 2 and 5</text>
+</svg>

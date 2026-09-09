@@ -6,13 +6,18 @@ A SKY130 RTL-to-GDSII study of low-power MAC architectures for quantized Edge-AI
 
 ## Key results
 
-| Architecture | Precision | Area | Power | Frequency | Energy/inference | Accuracy |
+| Architecture | Precision | Area | Power (typ.) | Frequency | Energy/inference | Accuracy* |
 |---|---|---:|---:|---:|---:|---:|
 | Adder (Experiment 0) | n/a | 0.002578 mm² | see `results/baseline/` | CLOCK_PERIOD 10 ns | n/a | n/a |
-| Sequential | INT8 | TBD | TBD | TBD | TBD | TBD |
-| Parallel 4-MAC | INT8 | TBD | TBD | TBD | TBD | TBD |
-| Sequential | INT4 | TBD | TBD | TBD | TBD | TBD |
-| Parallel 4-MAC | INT4 | TBD | TBD | TBD | TBD | TBD |
+| Sequential | INT8 | out of scope (deferred, see below) | — | — | — | — |
+| **Parallel 4-MAC (baseline)** | **INT8** | **0.246796 mm²** | **57.0 nW** | **50 MHz** | **0.0114 pJ** | **90.78%** |
+| Sequential | INT4 | out of scope (deferred, see below) | — | — | — | — |
+| **Parallel 4-MAC (optimized)** | **INT4** | **0.172923 mm²** | **21.2 nW** | **50 MHz** | **0.0042 pJ** | **81.37%** |
+| Improvement, INT8→INT4 (4-way parallel only) | — | **-29.9%** | **-62.8%** | 0% (unchanged, controlled) | **-62.8%** | **-9.41 pts** |
+
+\*Accuracy is a **synthetic** quantization-noise metric (paired random FP32 activations/weights, seed 1234, N=2000, NRMSE-based), not a real-dataset task-accuracy number — see [docs/ppa_comparison.md](docs/ppa_comparison.md#accuracy-caveat). Full table with run tags and notes: [`results/comparison.csv`](results/comparison.csv). Figures: [`docs/figures/`](docs/figures/). Technical report: [`docs/report/report.md`](docs/report/report.md).
+
+**Sequential-schedule variants (`int8_sequential`, `int4_sequential`) are explicitly out of scope for this project's timeline**, per [docs/research_methodology.md](docs/research_methodology.md)'s four-point matrix reduced to one axis (precision only, 4-way-parallel schedule held constant) — see [docs/optimization_plan.md](docs/optimization_plan.md). This is a scope decision recorded before the fact, not an incomplete run.
 
 Headline metric for the accelerator study: **energy per inference**. Experiment 0 is the toolchain proof (combinational 8-bit adder through OpenLane, run `RUN_2026.08.30_06.36.00`).
 
@@ -68,7 +73,7 @@ Do **not** commit the nested `OpenLane/` tree, virtualenvs, or raw run directori
 
 ## Current status
 
-Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, then a correct 8×4 accelerator (each PE holds eight weights), then OpenLane.
+All eight sprints are complete. The Python golden model, the four-PE signed-INT8 accelerator RTL, bit-exact RTL verification, and the full RTL-to-GDSII flow are done for both the INT8 baseline and the INT4 bit-width-optimized variant (both 4-way parallel, both DRC/LVS/route/setup-hold clean). Sequential-schedule variants are an explicit, pre-registered scope cut, not unfinished work — see [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md) and [docs/research_methodology.md](docs/research_methodology.md). The research package (figures, PPA/accuracy tables, technical report) is in [docs/figures/](docs/figures/) and [docs/report/report.md](docs/report/report.md).
 
 **How to follow the work (new contributors):** complete the project as **8 weekly sprints** (~20–25 hours/week). Start at [docs/02_eight_week_sprint_plan.md](docs/02_eight_week_sprint_plan.md) and open only the current week under [docs/sprints/](docs/sprints/). Contribution rules: [CONTRIBUTING.md](CONTRIBUTING.md). Checkpoint list: [docs/01_status_and_roadmap.md](docs/01_status_and_roadmap.md).
 
@@ -89,6 +94,9 @@ Phase 0 (baseline adder GDSII) is complete. Next: Python INT8 reference model, t
 | [docs/experiment0_adder.md](docs/experiment0_adder.md) | Adder RTL-to-GDS evidence |
 | [docs/research_methodology.md](docs/research_methodology.md) | Four-point experiment |
 | [docs/github_and_lab_notebook.md](docs/github_and_lab_notebook.md) | What to commit |
+| [docs/ppa_comparison.md](docs/ppa_comparison.md) | Sprint 7 INT8-vs-INT4 PPA/accuracy comparison, methodology, and caveats |
+| [docs/figures/](docs/figures/) | Sprint 8 figure pack (architecture, waveform, layout, PPA/accuracy/trade-off charts) |
+| [docs/report/report.md](docs/report/report.md) | Sprint 8 technical report |
 
 ## License
 
