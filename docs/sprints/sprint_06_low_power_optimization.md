@@ -126,10 +126,10 @@ designs/accelerator_int4_parallel/
 
 ## Acceptance criteria
 
-- [ ] One or two techniques chosen and justified
-- [ ] Baseline vs optimized **protocols** are comparable (same PDK, OpenLane major version, same golden-model method unless the experiment *is* quantization)
-- [ ] Optimized RTL matches its Python model
-- [ ] No fabricated percentage claims yet
+- [x] One or two techniques chosen and justified — one axis chosen: INT8 -> INT4 bit-width, 4-way-parallel MAC schedule held constant (see [docs/optimization_plan.md](../optimization_plan.md))
+- [x] Baseline vs optimized **protocols** are comparable (same PDK, OpenLane major version, same golden-model method unless the experiment *is* quantization) — PDK/OpenLane version are staged (`designs/accelerator_int4_parallel/config.json`, not yet run); golden-model method (symmetric quantization) unchanged, only `bits` differs, which *is* this sprint's experiment
+- [x] Optimized RTL matches its Python model — 25/25 bit-exact (`verification/tb_accelerator_int4.sv` vs. `algorithm/reference_model.forward(..., bits=4)`)
+- [x] No fabricated percentage claims yet — `results/comparison.csv`'s `int4_parallel` row still has no numeric PPA values
 
 ---
 
